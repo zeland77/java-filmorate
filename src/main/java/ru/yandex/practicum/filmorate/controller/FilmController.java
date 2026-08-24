@@ -65,7 +65,7 @@ public class FilmController {
             throw new ValidationException("Дата релиза фильма не может быть раньше "
                     + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
         }
-        if (film.getDuration() < 0) {
+        if (film.getDuration() <= 0) {
             log.error("Некорректная продолжительность фильма {} минут", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }

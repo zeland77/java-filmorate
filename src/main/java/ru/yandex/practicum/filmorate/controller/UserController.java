@@ -37,12 +37,6 @@ public class UserController {
             throw new ValidationException("Id должен быть указан");
         }
         validateUserFields(newUser);
-        /*        if (users.containsKey(newUser.getId()) && !users.get(newUser.getId()).getEmail().equals(newUser.getEmail())) {
-            if (users.values().stream().map(User::getEmail).anyMatch(email -> email.equals(newUser.getEmail()))) {
-                log.error("Электронная почта {} уже используется", newUser.getEmail());
-                throw new ValidationException("Эта электронная почта уже используется");
-            }
-        }*/
         User oldUser = users.get(newUser.getId());
         oldUser.setEmail(newUser.getEmail());
         oldUser.setLogin(newUser.getLogin());
@@ -62,9 +56,9 @@ public class UserController {
             log.error("Некорректный адрес электронной почты: {}", user.getEmail());
             throw new ValidationException("Некорректный адрес электронной почты");
         }
-        if (user.getLogin() == null || user.getLogin().isBlank()) {
-            log.error("Логин не должен быть пустым");
-            throw new ValidationException("Логин не должен быть пустым");
+        if (user.getLogin() == null || user.getLogin().contains(" ")) {
+            log.error("Логин не должен быть пустым или содержать пробелы");
+            throw new ValidationException("Логин не должен быть пусты мли содержать пробелы");
         }
         if (user.getBirthday() == null) {
             log.error("Дата рождения не может быть пустой");
