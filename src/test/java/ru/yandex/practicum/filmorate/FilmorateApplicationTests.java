@@ -150,7 +150,26 @@ class FilmorateApplicationTests {
 
         Throwable rootCause = exception.getCause();
         assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Логин не должен быть пустым", rootCause.getMessage());
+        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
+    }
+
+    @Test
+    void shouldCreateUserWithSpaceLogin() throws Exception {
+        User requestDto = new User();
+        requestDto.setLogin("dima petrov");
+        requestDto.setName("Дмитрий");
+        requestDto.setEmail("dima@example.com");
+        requestDto.setBirthday(LocalDate.of(1999, 12, 12));
+
+        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
+            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDto)));
+        });
+
+        Throwable rootCause = exception.getCause();
+        assertInstanceOf(ValidationException.class, rootCause);
+        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
     }
 
     @Test
