@@ -7,8 +7,12 @@ import java.util.Collection;
 
 public interface UserStorage {
     public Collection<User> findAll();
+
     public User create(User user) throws ValidationException;
+
     public User delete(User user) throws ValidationException;
+
     public User update(User newUser) throws ValidationException;
+
     public User getUser(Long id);
 }
