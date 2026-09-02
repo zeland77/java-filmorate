@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -13,6 +12,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -24,14 +25,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-//@SpringBootTest
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -106,15 +104,18 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dimaexample.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Некорректный адрес электронной почты", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Некорректный адрес электронной почты",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -124,15 +125,18 @@ class FilmorateApplicationTests {
         requestDto.setLogin("dima");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Электронная почта не должна быть пустой", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Электронная почта не должна быть пустой",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -142,15 +146,18 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Логин не должен быть пусты мли содержать пробелы",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -161,15 +168,18 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Логин не должен быть пусты мли содержать пробелы",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -180,15 +190,18 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.now().plusDays(1));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата рождения не может быть в будущем", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Дата рождения не может быть в будущем",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -198,15 +211,18 @@ class FilmorateApplicationTests {
         requestDto.setLogin("dima");
         requestDto.setEmail("dima@example.com");
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата рождения не может быть пустой", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Дата рождения не может быть пустой",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -254,15 +270,18 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dimaexample.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Id должен быть указан", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Id должен быть указан",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -344,15 +363,18 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Название фильма не может быть пустым", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Название фильма не может быть пустым",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -363,16 +385,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Максимальная длина описания " + Film.MAX_LENGTH_DESCRIPTION + " символов",
-                rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Максимальная длина описания "
+                                    + Film.MAX_LENGTH_DESCRIPTION + " символов",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -383,16 +408,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1895, 12, 27));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата релиза фильма не может быть раньше "
-                + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Дата релиза фильма не может быть раньше "
+                                    + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -403,15 +431,18 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(-1L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Продолжительность фильма должна быть положительным числом", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Продолжительность фильма должна быть положительным числом",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -459,15 +490,18 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(100L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Id должен быть указан", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Id должен быть указан",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -479,15 +513,18 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(100L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Фильм с id = " + requestDto.getId() + " не найден", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        NotFoundException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertEquals("Фильм с id = " + requestDto.getId() + " не найден",
+                            exception.getMessage());
+                });
     }
 
     @Test
