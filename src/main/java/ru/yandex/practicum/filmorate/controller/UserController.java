@@ -28,6 +28,11 @@ public class UserController {
         return userStorage.findAll();
     }
 
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable("id") Long id) {
+        return userStorage.getUser(id);
+    }
+
     @GetMapping("/{id}/friends")
     public Collection<User> friendsById(@PathVariable("id") Long id) {
         return userService.friendsById(id);
@@ -63,4 +68,5 @@ public class UserController {
     public User deleteFromFriends(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
         return userService.deleteFriend(id, friendId);
     }
+
 }

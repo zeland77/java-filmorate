@@ -13,11 +13,10 @@ import java.util.Collection;
 import java.util.Comparator;
 
 @Service
-@RequestMapping("/films")
 @Slf4j
 public class FilmService {
-    FilmStorage filmStorage;
-    UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
     public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
@@ -61,4 +60,5 @@ public class FilmService {
         film.removeLike(userId);
         return film;
     }
+
 }

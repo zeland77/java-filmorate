@@ -14,8 +14,8 @@ import java.util.*;
 @RequestMapping("/films")
 @Slf4j
 public class FilmController {
-    private FilmStorage filmStorage;
-    private FilmService filmService;
+    private final FilmStorage filmStorage;
+    private final FilmService filmService;
 
     @Autowired
     public FilmController(FilmStorage filmStorage, FilmService filmService) {
@@ -26,6 +26,16 @@ public class FilmController {
     @GetMapping
     public Collection<Film> findAll() {
         return filmStorage.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film getFilm(@PathVariable("id") Long id) {
+        return filmStorage.getFilm(id);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> mostPopular(@RequestParam(required = false, defaultValue = "10") final Integer count) {
+        return filmService.mostPopular(count);
     }
 
     @PostMapping
@@ -39,23 +49,19 @@ public class FilmController {
         return filmStorage.update(film);
     }
 
-    @DeleteMapping
-    public Film delete(@RequestBody Film film) {
-        return filmStorage.delete(film);
-    }
-
-    @GetMapping("/popular")
-    public Collection<Film> mostPopular(@RequestParam(required = false, defaultValue = "10") final Integer count) {
-        return filmService.mostPopular(count);
-    }
-
     @PutMapping("/{id}/like/{userId}")
     public Film addLike(@PathVariable("id") Long filmId, @PathVariable("userId") Long userId) {
         return filmService.addLike(filmId, userId);
+    }
+
+    @DeleteMapping
+    public Film delete(@RequestBody Film film) {
+        return filmStorage.delete(film);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public Film deleteLike(@PathVariable("id") Long filmId, @PathVariable("userId") Long userId) {
         return filmService.deleteLike(filmId, userId);
     }
+
 }

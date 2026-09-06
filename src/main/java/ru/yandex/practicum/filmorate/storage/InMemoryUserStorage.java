@@ -1,10 +1,8 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -17,7 +15,7 @@ import java.util.Map;
 @Component
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
-    private Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
 
     public Collection<User> findAll() {
         return users.values();
@@ -32,12 +30,16 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public User delete(User user) throws ValidationException {
-        log.info("Метод /delete ещё не реализован.");
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Метод /delete ещё не реализован.");
+        if (user == null || !users.containsValue(user)) {
+            log.info("Пользователь {} не найден", user);
+            throw new NotFoundException("Пользователь не найден");
+        }
+        users.remove(user.getId());
+        return user;
     }
 
     public User getUser(Long id) throws NotFoundException {
-        if (users.values().stream().filter(user -> user.getId() == id).findFirst().isEmpty()) {
+        if (users.values().stream().filter(user -> user.getId().equals(id)).findFirst().isEmpty()) {
             log.error("Пользователь с id = {} не найден", id);
             throw new NotFoundException("Пользователь с id = " + id + " не найден");
         }
@@ -50,7 +52,7 @@ public class InMemoryUserStorage implements UserStorage {
             throw new ValidationException("Id должен быть указан");
         }
         validateUserFields(newUser);
-        if (users.values().stream().filter(user -> user.getId() == newUser.getId()).findFirst().isEmpty()) {
+        if (users.values().stream().filter(user -> user.getId().equals(newUser.getId())).findFirst().isEmpty()) {
             log.error("Пользователь с id = {} не найден", newUser.getId());
             throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
         }
@@ -72,7 +74,7 @@ public class InMemoryUserStorage implements UserStorage {
             log.error("Некорректный адрес электронной почты: {}", user.getEmail());
             throw new ValidationException("Некорректный адрес электронной почты");
         }
-        if (user.getLogin() == null || user.getLogin().contains(" ")) {
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             log.error("Логин не должен быть пустым или содержать пробелы");
             throw new ValidationException("Логин не должен быть пусты мли содержать пробелы");
         }

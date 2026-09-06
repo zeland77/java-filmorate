@@ -6,13 +6,13 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Collection;
 
 public interface UserStorage {
-    public Collection<User> findAll();
+    Collection<User> findAll();
 
-    public User create(User user) throws ValidationException;
+    User create(User user) throws ValidationException;
 
-    public User delete(User user) throws ValidationException;
+    User delete(User user) throws ValidationException;
 
-    public User update(User newUser) throws ValidationException;
+    User update(User newUser) throws ValidationException;
 
-    public User getUser(Long id);
+    User getUser(Long id);
 }

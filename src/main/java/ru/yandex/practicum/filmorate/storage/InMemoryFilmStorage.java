@@ -1,9 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -31,8 +29,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     public Film delete(Film film) throws ValidationException {
-        log.info("Метод /delete ещё не реализован.");
-        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Метод /delete ещё не реализован.");
+        if (film == null || !films.containsValue(film)) {
+            log.info("Фильм не найден");
+            throw new NotFoundException("Фильм не найден");
+        }
+        films.remove(film.getId());
+        return film;
     }
 
     public Film update(Film newFilm) throws ValidationException {
@@ -63,17 +65,17 @@ public class InMemoryFilmStorage implements FilmStorage {
             log.error("Название фильма не может быть пустым");
             throw new ValidationException("Название фильма не может быть пустым");
         }
-        if (film.getDescription().length() > Film.MAX_LENGTH_DESCRIPTION) {
+        if (film.getDescription() == null || film.getDescription().length() > Film.MAX_LENGTH_DESCRIPTION) {
             log.error("Длина описания больше {} символов", Film.MAX_LENGTH_DESCRIPTION);
             throw new ValidationException("Максимальная длина описания " + Film.MAX_LENGTH_DESCRIPTION + " символов");
         }
-        if (film.getReleaseDate().isBefore(Film.MIN_FILM_RELEASE_DATE)) {
+        if (film.getReleaseDate() == null || film.getReleaseDate().isBefore(Film.MIN_FILM_RELEASE_DATE)) {
             log.error("Дата релиза фильма  раньше {}",
                     Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
             throw new ValidationException("Дата релиза фильма не может быть раньше "
                     + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
         }
-        if (film.getDuration() <= 0) {
+        if (film.getDuration() == null || film.getDuration() <= 0) {
             log.error("Некорректная продолжительность фильма {} минут", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }

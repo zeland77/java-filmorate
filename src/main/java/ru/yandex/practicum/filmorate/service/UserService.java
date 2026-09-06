@@ -12,7 +12,7 @@ import java.util.Collection;
 @Service
 @Slf4j
 public class UserService {
-    UserStorage userStorage;
+    private final UserStorage userStorage;
 
     public UserService(UserStorage friendStorage) {
         this.userStorage = friendStorage;
@@ -31,17 +31,18 @@ public class UserService {
 
     public User addFriend(Long id, Long friendId) {
         User user = userStorage.getUser(id);
-        user.getFriends().add(friendId);
         User friendUser = userStorage.getUser(friendId);
+        user.getFriends().add(friendId);
         friendUser.getFriends().add(id);
         return user;
     }
 
     public User deleteFriend(Long id, Long friendId) {
         User user = userStorage.getUser(id);
-        user.getFriends().remove(friendId);
         User friendUser = userStorage.getUser(friendId);
+        user.getFriends().remove(friendId);
         friendUser.getFriends().remove(id);
         return user;
     }
+
 }
