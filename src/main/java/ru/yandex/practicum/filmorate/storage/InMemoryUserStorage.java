@@ -99,5 +99,4 @@ public class InMemoryUserStorage implements UserStorage {
                 .orElse(0);
         return ++currentMaxId;
     }
-
 }
