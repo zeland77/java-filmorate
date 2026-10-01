@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -13,25 +12,20 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-//@SpringBootTest
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -46,7 +40,7 @@ class FilmorateApplicationTests {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private final Map<Long, User> users = mock(Map.class);
+    private final Map<Long, User> users = new HashMap<>();
 
     @MockitoBean
     private final Map<Long, Film> films = new HashMap<>();
@@ -106,15 +100,19 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dimaexample.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Некорректный адрес электронной почты", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Некорректный адрес электронной почты",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -124,15 +122,19 @@ class FilmorateApplicationTests {
         requestDto.setLogin("dima");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Электронная почта не должна быть пустой", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Электронная почта не должна быть пустой",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -142,15 +144,19 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Логин не должен быть пусты мли содержать пробелы",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -161,15 +167,19 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Логин не должен быть пусты мли содержать пробелы", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Логин не должен быть пусты мли содержать пробелы",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -180,15 +190,19 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dima@example.com");
         requestDto.setBirthday(LocalDate.now().plusDays(1));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата рождения не может быть в будущем", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Дата рождения не может быть в будущем",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -198,15 +212,19 @@ class FilmorateApplicationTests {
         requestDto.setLogin("dima");
         requestDto.setEmail("dima@example.com");
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата рождения не может быть пустой", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Дата рождения не может быть пустой",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -254,15 +272,43 @@ class FilmorateApplicationTests {
         requestDto.setEmail("dimaexample.com");
         requestDto.setBirthday(LocalDate.of(1999, 12, 12));
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_USERS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Id должен быть указан",
+                            exception.getMessage());
+                });
+    }
 
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Id должен быть указан", rootCause.getMessage());
+    @Test
+    void shouldUpdateUserWithNotFoundId() throws Exception {
+        User requestDto = new User();
+        requestDto.setId(5L);
+        requestDto.setName("Дмитрий");
+        requestDto.setLogin("dima");
+        requestDto.setEmail("dimaexample.com");
+        requestDto.setBirthday(LocalDate.of(1999, 12, 12));
+
+        mockMvc.perform(put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        NotFoundException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Фильм с id = 5 не найден",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -344,15 +390,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Название фильма не может быть пустым", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Название фильма не может быть пустым",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -363,16 +413,20 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Максимальная длина описания " + Film.MAX_LENGTH_DESCRIPTION + " символов",
-                rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Максимальная длина описания "
+                                    + Film.MAX_LENGTH_DESCRIPTION + " символов",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -383,16 +437,20 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1895, 12, 27));
         requestDto.setDuration(109L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Дата релиза фильма не может быть раньше "
-                + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")), rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Дата релиза фильма не может быть раньше "
+                                    + Film.MIN_FILM_RELEASE_DATE.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -403,15 +461,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(-1L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Продолжительность фильма должна быть положительным числом", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Продолжительность фильма должна быть положительным числом",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -459,15 +521,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(100L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Id должен быть указан", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        ValidationException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Id должен быть указан",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -479,15 +545,19 @@ class FilmorateApplicationTests {
         requestDto.setReleaseDate(LocalDate.of(1997, 12, 12));
         requestDto.setDuration(100L);
 
-        ServletException exception = Assertions.assertThrows(ServletException.class, () -> {
-            mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requestDto)));
-        });
-
-        Throwable rootCause = exception.getCause();
-        assertInstanceOf(ValidationException.class, rootCause);
-        assertEquals("Фильм с id = " + requestDto.getId() + " не найден", rootCause.getMessage());
+        mockMvc.perform(MockMvcRequestBuilders.put(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        NotFoundException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Фильм с id = " + requestDto.getId() + " не найден",
+                            exception.getMessage());
+                });
     }
 
     @Test
@@ -536,6 +606,445 @@ class FilmorateApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().json(objectMapper.writeValueAsString(collection)));
+    }
+
+    @Test
+    void shouldFriendAddSuccessfully() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+        User responseDto1 = new User();
+        responseDto1.setId(1L);
+        responseDto1.setName("Дмитрий");
+        responseDto1.setLogin("dima");
+        responseDto1.setEmail("dima@example.com");
+        responseDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        responseDto1.setFriends(Set.of(2L));
+
+        Mockito.when(users.put(Mockito.any(Long.class), Mockito.any(User.class)))
+                .thenReturn(responseDto1);
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().json(objectMapper.writeValueAsString(responseDto1)));
+    }
+
+    @Test
+    void shouldFriendAddWithUnknownId() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/users/1/friends/3")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(result -> Assertions.assertInstanceOf(
+                        NotFoundException.class,
+                        result.getResolvedException()))
+                .andExpect(result -> {
+                    Exception exception = result.getResolvedException();
+                    Assertions.assertNotNull(exception);
+                    Assertions.assertEquals("Пользователь с id = 3 не найден",
+                            exception.getMessage());
+                });
+    }
+
+    @Test
+    void shouldFriendGetSuccessfully() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+        User responseDto2 = new User();
+        responseDto2.setId(2L);
+        responseDto2.setName("Дмитрий");
+        responseDto2.setLogin("dima");
+        responseDto2.setEmail("dima@example.com");
+        responseDto2.setBirthday(LocalDate.of(1999, 12, 12));
+        responseDto2.setFriends(Set.of(1L));
+
+        Collection<User> collection = new ArrayList<>();
+        collection.add(responseDto2);
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(get("/users/1/friends")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().json(objectMapper.writeValueAsString(collection)));
+    }
+
+    @Test
+    void shouldFriendGetWithNotFoundId() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+        User responseDto2 = new User();
+        responseDto2.setId(2L);
+        responseDto2.setName("Дмитрий");
+        responseDto2.setLogin("dima");
+        responseDto2.setEmail("dima@example.com");
+        responseDto2.setBirthday(LocalDate.of(1999, 12, 12));
+        responseDto2.setFriends(Set.of(1L));
+
+        Collection<User> collection = new ArrayList<>();
+        collection.add(responseDto2);
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(get("/users/3/friends")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+        @Test
+        void shouldFriendDeleteSuccessfully() throws Exception {
+            User requestDto1 = new User();
+            requestDto1.setName("Дмитрий");
+            requestDto1.setLogin("dima");
+            requestDto1.setEmail("dima@example.com");
+            requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+            User requestDto2 = new User();
+            requestDto2.setName("Дмитрий");
+            requestDto2.setLogin("dima");
+            requestDto2.setEmail("dima@example.com");
+            requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+            User responseDto1 = new User();
+            responseDto1.setId(1L);
+            responseDto1.setName("Дмитрий");
+            responseDto1.setLogin("dima");
+            responseDto1.setEmail("dima@example.com");
+            responseDto1.setBirthday(LocalDate.of(1999, 12, 12));
+
+            Mockito.when(users.put(Mockito.any(Long.class), Mockito.any(User.class)))
+                    .thenReturn(responseDto1);
+
+            mockMvc.perform(post(URI_USERS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(requestDto1)))
+                    .andExpect(status().is2xxSuccessful());
+
+            mockMvc.perform(post(URI_USERS)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(requestDto2)))
+                    .andExpect(status().is2xxSuccessful());
+
+            mockMvc.perform(put("/users/1/friends/2")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is2xxSuccessful());
+
+            mockMvc.perform(delete("/users/1/friends/2")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(content().json(objectMapper.writeValueAsString(responseDto1)));
+    }
+
+    @Test
+    void shouldFriendDeleteNotFriend() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto3 = new User();
+        requestDto3.setName("Дмитрий");
+        requestDto3.setLogin("dima");
+        requestDto3.setEmail("dima@example.com");
+        requestDto3.setBirthday(LocalDate.of(1999, 12, 12));
+
+        User responseDto1 = new User();
+        responseDto1.setId(1L);
+        responseDto1.setName("Дмитрий");
+        responseDto1.setLogin("dima");
+        responseDto1.setEmail("dima@example.com");
+        responseDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        responseDto1.setFriends(Set.of(2L));
+
+        Mockito.when(users.put(Mockito.any(Long.class), Mockito.any(User.class)))
+                .thenReturn(responseDto1);
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto3)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(delete("/users/1/friends/3")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().json(objectMapper.writeValueAsString(responseDto1)));
+    }
+
+    @Test
+    void shouldFriendDeleteUnknownId() throws Exception {
+        User requestDto1 = new User();
+        requestDto1.setName("Дмитрий");
+        requestDto1.setLogin("dima");
+        requestDto1.setEmail("dima@example.com");
+        requestDto1.setBirthday(LocalDate.of(1999, 12, 12));
+        User requestDto2 = new User();
+        requestDto2.setName("Дмитрий");
+        requestDto2.setLogin("dima");
+        requestDto2.setEmail("dima@example.com");
+        requestDto2.setBirthday(LocalDate.of(1999, 12, 12));
+
+        User responseDto1 = new User();
+        responseDto1.setId(1L);
+        responseDto1.setName("Дмитрий");
+        responseDto1.setLogin("dima");
+        responseDto1.setEmail("dima@example.com");
+        responseDto1.setBirthday(LocalDate.of(1999, 12, 12));
+
+        Mockito.when(users.put(Mockito.any(Long.class), Mockito.any(User.class)))
+                .thenReturn(responseDto1);
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto1)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto2)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/users/1/friends/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(delete("/users/1/friends/3")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldLikeAddSuccessfully() throws Exception {
+        Film film = new Film();
+        film.setId(1L);
+        film.setName("Достать ножи");
+        film.setDescription("укукукуку  уеккекен екненгнг");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(111L);
+
+        User user = new User();
+        user.setName("Дмитрий");
+        user.setLogin("dima");
+        user.setEmail("dima@example.com");
+        user.setBirthday(LocalDate.of(1999, 12, 12));
+
+        Film responseDto = new Film();
+        responseDto.setId(1L);
+        responseDto.setName("Достать ножи");
+        responseDto.setDescription("укукукуку  уеккекен екненгнг");
+        responseDto.setReleaseDate(LocalDate.of(2000, 1, 1));
+        responseDto.setDuration(111L);
+        responseDto.setLike(1L);
+
+        mockMvc.perform(post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().json(objectMapper.writeValueAsString(responseDto)));
+    }
+
+    @Test
+    void shouldLikeAddUnknownFilm() throws Exception {
+        User user = new User();
+        user.setName("Дмитрий");
+        user.setLogin("dima");
+        user.setEmail("dima@example.com");
+        user.setBirthday(LocalDate.of(1999, 12, 12));
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldLikeAddUnknownUser() throws Exception {
+        Film film = new Film();
+        film.setId(1L);
+        film.setName("Достать ножи");
+        film.setDescription("укукукуку  уеккекен екненгнг");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(111L);
+
+        mockMvc.perform(post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldLikeDeleteSuccessfully() throws Exception {
+        Film film = new Film();
+        film.setId(1L);
+        film.setName("Достать ножи");
+        film.setDescription("укукукуку  уеккекен екненгнг");
+        film.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film.setDuration(111L);
+
+        User user = new User();
+        user.setName("Дмитрий");
+        user.setLogin("dima");
+        user.setEmail("dima@example.com");
+        user.setBirthday(LocalDate.of(1999, 12, 12));
+
+        Film responseDto = new Film();
+        responseDto.setId(1L);
+        responseDto.setName("Достать ножи");
+        responseDto.setDescription("укукукуку  уеккекен екненгнг");
+        responseDto.setReleaseDate(LocalDate.of(2000, 1, 1));
+        responseDto.setDuration(111L);
+
+        mockMvc.perform(post(URI_FILMS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(film)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(put("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(delete("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().json(objectMapper.writeValueAsString(responseDto)));
+    }
+
+    @Test
+    void shouldLikeDeleteUnknownFilm() throws Exception {
+        User user = new User();
+        user.setName("Дмитрий");
+        user.setLogin("dima");
+        user.setEmail("dima@example.com");
+        user.setBirthday(LocalDate.of(1999, 12, 12));
+
+        mockMvc.perform(post(URI_USERS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().is2xxSuccessful());
+
+        mockMvc.perform(delete("/films/1/like/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
 }
