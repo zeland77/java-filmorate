@@ -6,6 +6,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
 public class Film {
@@ -17,18 +18,20 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Long duration;
+    private Mpa mpa;
+    private Set<Genre> genres = new TreeSet<>();
     private Set<Long> likes = new HashSet<>();
 
-    public void setLike(Long userId) {
+    public void addGenre(Genre genre) { genres.add(genre); }
+    public void removeGenre(Genre genre) { genres.remove(genre); }
+
+    public void addLike(Long userId) {
         likes.add(userId);
     }
-
     public void removeLike(Long userId) {
         likes.remove(userId);
     }
-
     public int countLikes() {
         return likes.size();
     }
-
 }
