@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.repository;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,7 +11,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -215,7 +213,7 @@ public class JdbcFilmRepository implements FilmRepository {
         String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT 10";
 
         List<Long> listIdPopular = jdbc.queryForList(sql2, params, Long.class);
-        List<Film> filmPopularSorted= new ArrayList<>();
+        List<Film> filmPopularSorted = new ArrayList<>();
         for (Long id : listIdPopular) {
             filmPopularSorted.add(filmPopular.get(id));
         }
