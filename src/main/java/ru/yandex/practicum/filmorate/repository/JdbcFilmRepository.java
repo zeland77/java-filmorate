@@ -116,7 +116,7 @@ public class JdbcFilmRepository implements FilmRepository {
                 namedParameters
         );
 
-        String sql = "UPDATE INTO films_genres(film_id, genre_id) KEY (film_id, genre_id) VALUES (:filmId, :genreId)";
+        String sql = "UPDATE films_genres SET film_id = :filmId, genre_id = :genreId";
         SqlParameterSource[] batchArgs = film.getGenres().stream()
                 .map(g -> new MapSqlParameterSource().addValue("filmId", film.getId())
                         .addValue("genreId", g.getId()))
