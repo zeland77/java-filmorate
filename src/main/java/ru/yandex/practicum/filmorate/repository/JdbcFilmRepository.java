@@ -100,6 +100,9 @@ public class JdbcFilmRepository implements FilmRepository {
         jdbc.update("DELETE FROM films_genres WHERE film_id = :id",
                 Map.of("id", film.getId())
         );
+        jdbc.update("DELETE FROM likes WHERE film_id = :id",
+                Map.of("id", film.getId())
+        );
         jdbc.update("DELETE FROM films WHERE id = :id",
                 Map.of("id", film.getId())
         );
@@ -109,9 +112,17 @@ public class JdbcFilmRepository implements FilmRepository {
     public Optional<Film> update(Film film) {
         SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(film);
         jdbc.update("UPDATE films SET name = :name, description = :description, releaseDate = :releaseDate," +
-                        " duration = :duration WHERE id = :id",
+                        " duration = :duration, mpa_id = :mpa.id WHERE id = :id",
                 namedParameters
         );
+
+        String sql = "UPDATE INTO films_genres(film_id, genre_id) KEY (film_id, genre_id) VALUES (:filmId, :genreId)";
+        SqlParameterSource[] batchArgs = film.getGenres().stream()
+                .map(g -> new MapSqlParameterSource().addValue("filmId", film.getId())
+                        .addValue("genreId", g.getId()))
+                .toArray(MapSqlParameterSource[]::new);
+        jdbc.batchUpdate(sql, batchArgs);
+
         return getFilm(film.getId());
     }
 
@@ -173,12 +184,12 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     public Collection<Film> mostPopular(Integer count) {
-        SqlParameterSource params = new MapSqlParameterSource();
+        SqlParameterSource params = new MapSqlParameterSource("limit", count);
         String sql = "SELECT films.*, mpa.name AS mpa_name, films_genres.GENRE_ID, genres.NAME AS genre_name FROM FILMS " +
                 "LEFT JOIN films_genres ON films.id = films_genres.film_id " +
                 "LEFT JOIN mpa ON films.MPA_ID = mpa.id " +
                 "LEFT JOIN genres ON GENRE_ID = genres.id " +
-                "WHERE films.id IN (SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT 10)";
+                "WHERE films.id IN (SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit)";
         Map<Long, Film> filmPopular = jdbc.query(sql, params, rs -> {
             Map<Long, Film> filmMap = new HashMap<>();
 
@@ -210,7 +221,7 @@ public class JdbcFilmRepository implements FilmRepository {
             return filmMap;
         });
 
-        String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT 10";
+        String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit";
 
         List<Long> listIdPopular = jdbc.queryForList(sql2, params, Long.class);
         List<Film> filmPopularSorted = new ArrayList<>();
