@@ -1,12 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 
@@ -14,23 +14,21 @@ import java.util.Collection;
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
-    private UserStorage userStorage;
     private UserService userService;
 
     @Autowired
-    public UserController(UserStorage userStorage, UserService userService) {
-        this.userStorage = userStorage;
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
     @GetMapping
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/{id}")
     public User getUser(@PathVariable("id") Long id) {
-        return userStorage.getUser(id);
+        return userService.getUser(id);
     }
 
     @GetMapping("/{id}/friends")
@@ -40,18 +38,18 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestBody User user) {
-        return userStorage.create(user);
+    public User create(@Valid @RequestBody User user) {
+        return userService.create(user);
     }
 
     @PutMapping
-    public User update(@RequestBody User user) {
-        return userStorage.update(user);
+    public User update(@Valid @RequestBody User user) {
+        return userService.update(user);
     }
 
     @DeleteMapping
-    public User delete(@RequestBody User user) {
-        return userStorage.delete(user);
+    public User delete(@Valid @RequestBody User user) {
+        return userService.delete(user);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -66,7 +64,7 @@ public class UserController {
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFromFriends(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
-        return userService.deleteFriend(id, friendId);
+        return userService.removeFriend(id, friendId);
     }
 
 }
