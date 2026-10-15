@@ -13,10 +13,7 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository("jdbcUserRepository")
 @RequiredArgsConstructor
@@ -98,6 +95,17 @@ public class JdbcUserRepository implements UserRepository {
                 Map.of("userId", user.getId()),
                 userRowMapper);
         return friends;
+    }
+
+    public Map<Long, Set<Long>> getAllUsersLikes() {
+        String sql = "SELECT user_id, film_id FROM likes";
+        Map<Long, Set<Long>> userLikesMap = new HashMap<>();
+        jdbc.query(sql, rs -> {
+            long userId = rs.getLong("user_id");
+            long filmId = rs.getLong("film_id");
+            userLikesMap.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+        return userLikesMap;
     }
 
 }
