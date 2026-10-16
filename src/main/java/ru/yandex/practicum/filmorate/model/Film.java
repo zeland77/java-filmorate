@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -21,6 +21,12 @@ public class Film {
     private Mpa mpa;
     private Set<Genre> genres = new TreeSet<>();
     private Set<Long> likes = new HashSet<>();
+    @Valid
+    private Set<Director> directors = new TreeSet<>();
+
+    public void addDirector(Director director) {
+        this.directors.add(director);
+    }
 
     public void addGenre(Genre genre) {
         genres.add(genre);

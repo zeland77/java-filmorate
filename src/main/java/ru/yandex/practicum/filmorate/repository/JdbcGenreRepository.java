@@ -17,7 +17,7 @@ public class JdbcGenreRepository implements GenreRepository {
     private final GenreRowMapper genreRowMapper;
 
     public Collection<Genre> findAll() {
-        List<Genre> genres = jdbc.query("SELECT * FROM genres", genreRowMapper);
+        List<Genre> genres = jdbc.query("SELECT * FROM genres ORDER BY id", genreRowMapper);
         return genres;
     }
 

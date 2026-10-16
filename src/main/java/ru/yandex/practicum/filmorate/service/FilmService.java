@@ -95,4 +95,8 @@ public class FilmService {
         }
     }
 
+    public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
+        return filmRepository.findFilmsByDirector(directorId, sortBy);
+    }
+
 }
