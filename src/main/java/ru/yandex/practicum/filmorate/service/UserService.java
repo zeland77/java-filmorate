@@ -3,9 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.repository.EventRepository;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.LocalDate;
@@ -16,9 +20,11 @@ import java.util.Optional;
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final EventService eventService;
 
-    public UserService(@Qualifier("jdbcUserRepository") UserRepository userRepository) {
+    public UserService(@Qualifier("jdbcUserRepository") UserRepository userRepository, EventService eventService) {
         this.userRepository = userRepository;
+        this.eventService = eventService;
     }
 
     public Collection<User> findAll() {
@@ -67,6 +73,7 @@ public class UserService {
                 .toList();
     }
 
+    @Transactional
     public User addFriend(Long userId, Long friendId) {
         User user = userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
@@ -74,15 +81,18 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
         //user.getFriends().keySet().add(friendId);
         userRepository.addFriend(user, friend);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
         return user;
     }
 
+    @Transactional
     public User removeFriend(Long userId, Long friendId) {
         User user = userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userRepository.getUser(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
         userRepository.removeFriend(user, friend);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
         return user;
     }
 

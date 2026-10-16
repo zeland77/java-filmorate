@@ -60,3 +60,14 @@ ALTER TABLE films_genres ADD FOREIGN KEY (film_id) REFERENCES films (id);
 ALTER TABLE films_genres ADD FOREIGN KEY (genre_id) REFERENCES genres (id);
 
 ALTER TABLE films ADD FOREIGN KEY (mpa_id) REFERENCES mpa (id);
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    timestamp BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    event_type VARCHAR(20) NOT NULL,
+    operation VARCHAR(20) NOT NULL,
+    entity_id BIGINT NOT NULL
+);
+
+ALTER TABLE events ADD FOREIGN KEY (user_id) REFERENCES users (id);
