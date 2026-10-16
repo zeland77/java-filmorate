@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -43,7 +44,9 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
     }
 
-    public Film delete(Film film) {
+    @Transactional
+    public Film delete(Long filmId) {
+        Film film = getFilm(filmId);
         return filmRepository.delete(film);
     }
 

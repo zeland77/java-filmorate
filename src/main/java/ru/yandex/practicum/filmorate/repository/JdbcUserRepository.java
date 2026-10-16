@@ -50,7 +50,7 @@ public class JdbcUserRepository implements UserRepository {
         jdbc.update("DELETE FROM likes WHERE user_id = :id",
                 Map.of("id", user.getId())
         );
-        jdbc.update("DELETE FROM friends WHERE user_id = :id",
+        jdbc.update("DELETE FROM friends WHERE user_id = :id OR friend_id = :id",
                 Map.of("id", user.getId())
         );
         jdbc.update("DELETE FROM users WHERE id = :id",
