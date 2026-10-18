@@ -56,7 +56,9 @@ public class ReviewService {
     public Review update(Review review) {
         validateReviewFields(review);
         return reviewRepository.update(review)
-                .orElseThrow(() -> new NotFoundException("Отзыв с id = " + review.getReviewId() + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Отзыв с reviewId = " + review.getReviewId() +
+                        " для фильма filmId = " + review.getFilmId() +
+                        ", оставленный userId = " + review.getUserId() + " не найден"));
     }
 
     public void delete(Long reviewId) {
@@ -117,6 +119,11 @@ public class ReviewService {
         if (review.getContent() == null || review.getContent().isBlank()) {
             log.error("Отзыв не должен быть пустым или содержать пробелы");
             throw new ValidationException("Отзыв не должен быть пустым мли содержать пробелы");
+        }
+
+        if (review.getContent().length() > Review.MAX_LENGTH_CONTENT) {
+            log.error("Отзыв не должен быть пустым или содержать пробелы");
+            throw new ValidationException("Слишком большой отзыв. Сократите до " + Review.MAX_LENGTH_CONTENT + " символов");
         }
 
         if (review.getIsPositive() == null) {

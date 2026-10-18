@@ -85,19 +85,16 @@ public class JdbcReviewRepository implements ReviewRepository {
 
     public Optional<Review> update(Review review) {
         SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(review);
-        jdbc.update("UPDATE reviews SET content = :content, isPositive = :isPositive",
+        int rowUpdated =jdbc.update("UPDATE reviews SET content = :content, isPositive = :isPositive " +
+                        "WHERE id = :reviewId AND user_id = :userId AND film_id = :filmId",
                 namedParameters);
-        return getReview(review.getReviewId());
-
+        if (rowUpdated > 0) {
+            return getReview(review.getReviewId());
+        }
+        return Optional.empty();
     }
 
     public void delete(Long reviewId) {
-        jdbc.update("DELETE FROM reviews_likes WHERE review_id = :id",
-                Map.of("id", reviewId)
-        );
-        jdbc.update("DELETE FROM reviews_dislikes WHERE review_id = :id",
-                Map.of("id", reviewId)
-        );
         jdbc.update("DELETE FROM reviews WHERE id = :id",
                 Map.of("id", reviewId)
         );
