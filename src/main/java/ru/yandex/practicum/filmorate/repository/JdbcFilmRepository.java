@@ -2,8 +2,7 @@ package ru.yandex.practicum.filmorate.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -92,89 +91,74 @@ public class JdbcFilmRepository implements FilmRepository {
 
     public Optional<Film> create(Film film) {
         Set<Long> dirIdsSet = film.getDirectors().stream().map(Director::getId).collect(Collectors.toSet());
+        Set<Long> genreIdsSet = film.getGenres().stream().map(Genre::getId).collect(Collectors.toSet());
+        Set<Long> mpaIdSet = Set.of(film.getMpa().getId());
 
-        try {
-            checkDirectorIds(dirIdsSet);
-            KeyHolder keyHolder = new GeneratedKeyHolder();
-            SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(film);
-            jdbc.update("INSERT INTO films(name, description, releaseDate, duration, mpa_id)" +
-                            " VALUES (:name, :description, :releaseDate, :duration, :mpa.id)",
-                    namedParameters,
-                    keyHolder,
-                    new String[]{"id"}
-            );
-            Long filmId = keyHolder.getKey().longValue();
+        checkIdsExist(dirIdsSet, "directors", "Режиссеры не найдены: ");
+        checkIdsExist(genreIdsSet, "genres", "Жанры не найдены: ");
+        checkIdsExist(mpaIdSet, "mpa", "Рейтинг не найден: ");
 
-            insertIntoFilmDirectors(filmId, dirIdsSet);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(film);
+        jdbc.update("INSERT INTO films(name, description, releaseDate, duration, mpa_id)" +
+                        " VALUES (:name, :description, :releaseDate, :duration, :mpa.id)",
+                namedParameters,
+                keyHolder,
+                new String[]{"id"}
+        );
+        Long filmId = keyHolder.getKey().longValue();
 
-            String sql = "MERGE INTO films_genres(film_id, genre_id) KEY (film_id, genre_id) VALUES (:filmId, :genreId)";
-            log.info("перед запрос еще ок");
-            SqlParameterSource[] batchArgs = film.getGenres().stream()
-                    .map(g -> new MapSqlParameterSource().addValue("filmId", filmId)
-                            .addValue("genreId", g.getId()))
-                    .toArray(MapSqlParameterSource[]::new);
-            jdbc.batchUpdate(sql, batchArgs);
-            return getFilm(filmId);
-        } catch (DuplicateKeyException e) {
-            log.error("Ошибка при создании фильма. Такой фильм уже существует.");
-            return Optional.empty();
-        } catch (DataIntegrityViolationException e) {
-            log.error("Ошибка вставки жанров для фильма: нарушена целостность данных.");
-            throw new NotFoundException("Ошибка вставки рейтинга/жанров для фильма: нарушена целостность данных.");
-        }
+        insertLinks(filmId, dirIdsSet, "film_directors(film_id, director_id)");
+        insertLinks(filmId, genreIdsSet, "films_genres(film_id, genre_id)");
+
+        return getFilm(filmId);
     }
 
-    public void checkDirectorIds(Set<Long> ids) {
-        if (!ids.isEmpty()) {
-            List<Long> directorIds = ids.stream()
+    private void insertLinks(Long filmId, Set<Long> linkedIdsSet, String tableWithArgs) {
+        if (!linkedIdsSet.isEmpty()) {
+            List<Long> insertedIds = linkedIdsSet.stream()
                     .distinct()
                     .toList();
 
-            String placeholders = directorIds.stream()
+            String placeholders = insertedIds.stream()
+                    .map(id -> "(?, ?)")
+                    .collect(Collectors.joining(", "));
+            String query = ("INSERT INTO %s " +
+                    "VALUES " + placeholders).formatted(tableWithArgs);
+            Object[] args = new Object[insertedIds.size() * 2];
+            for (int i = 0; i < insertedIds.size(); i++) {
+                args[i * 2] = filmId;
+                args[i * 2 + 1] = insertedIds.get(i);
+            }
+            jdbc.getJdbcOperations().update(query, args);
+        }
+    }
+
+    private void checkIdsExist(Set<Long> ids, String table, String message) {
+        if (!ids.isEmpty()) {
+            List<Long> checkedIds = ids.stream()
+                    .distinct()
+                    .toList();
+
+            String placeholders = checkedIds.stream()
                     .map(id -> "(?)")
                     .collect(Collectors.joining(", "));
             String query = """
                     SELECT requested.id
                     FROM (VALUES %s) AS requested(id)
                     WHERE NOT EXISTS (
-                        SELECT 1 FROM directors d WHERE d.id = requested.id
+                        SELECT 1 FROM %s t WHERE t.id = requested.id
                     )
-                    """.formatted(placeholders);
+                    """.formatted(placeholders, table);
 
             List<Long> nonexistentIds = jdbc.getJdbcOperations().query(query, (rs, rowNum) ->
-                    rs.getLong("id"), directorIds.toArray());
+                    rs.getLong("id"), checkedIds.toArray());
             if (!nonexistentIds.isEmpty())
-                throw new NotFoundException("Режиссеры не найдены: " + ids);
-        }
-    }
-
-    private void insertIntoFilmDirectors(Long filmId, Set<Long> dirIdsSet) {
-        if (!dirIdsSet.isEmpty()) {
-            List<Long> directorIds = dirIdsSet.stream()
-                    .distinct()
-                    .toList();
-
-            String placeholders = directorIds.stream()
-                    .map(id -> "(?, ?)")
-                    .collect(Collectors.joining(", "));
-            String query = "INSERT INTO film_directors(film_id, director_id) " +
-                    "VALUES " + placeholders;
-            Object[] args = new Object[directorIds.size() * 2];
-            for (int i = 0; i < directorIds.size(); i++) {
-                args[i * 2] = filmId;
-                args[i * 2 + 1] = directorIds.get(i);
-            }
-            jdbc.getJdbcOperations().update(query, args);
+                throw new NotFoundException(message + nonexistentIds);
         }
     }
 
     public Film delete(Film film) {
-        jdbc.update("DELETE FROM films_genres WHERE film_id = :id",
-                Map.of("id", film.getId())
-        );
-        jdbc.update("DELETE FROM likes WHERE film_id = :id",
-                Map.of("id", film.getId())
-        );
         jdbc.update("DELETE FROM films WHERE id = :id",
                 Map.of("id", film.getId())
         );
@@ -183,7 +167,12 @@ public class JdbcFilmRepository implements FilmRepository {
 
     public Optional<Film> update(Film film) {
         Set<Long> dirIdsSet = film.getDirectors().stream().map(Director::getId).collect(Collectors.toSet());
-        checkDirectorIds(dirIdsSet);
+        Set<Long> genreIdsSet = film.getGenres().stream().map(Genre::getId).collect(Collectors.toSet());
+        Set<Long> mpaIdSet = Set.of(film.getMpa().getId());
+
+        checkIdsExist(dirIdsSet, "directors", "Режиссеры не найдены: ");
+        checkIdsExist(genreIdsSet, "genres", "Жанры не найдены: ");
+        checkIdsExist(mpaIdSet, "mpa", "Рейтинг не найден: ");
 
         SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(film);
         jdbc.update("UPDATE films SET name = :name, description = :description, releaseDate = :releaseDate," +
@@ -192,27 +181,10 @@ public class JdbcFilmRepository implements FilmRepository {
         );
 
         jdbc.getJdbcOperations().update("DELETE FROM film_directors WHERE film_id = ?", film.getId());
-        insertIntoFilmDirectors(film.getId(), dirIdsSet);
+        insertLinks(film.getId(), dirIdsSet, "film_directors(film_id, director_id)");
 
         jdbc.getJdbcOperations().update("DELETE FROM films_genres WHERE film_id = ?", film.getId());
-        if (!film.getGenres().isEmpty()) {
-            List<Long> genreIds = film.getGenres().stream()
-                    .map(Genre::getId)
-                    .distinct()
-                    .toList();
-
-            String placeholders = genreIds.stream()
-                    .map(id -> "(?, ?)")
-                    .collect(Collectors.joining(", "));
-            String query =
-                    "INSERT INTO films_genres(film_id, genre_id) VALUES" + placeholders;
-            Object[] args = new Object[genreIds.size() * 2];
-            for (int i = 0; i < genreIds.size(); i++) {
-                args[i * 2] = film.getId();
-                args[i * 2 + 1] = genreIds.get(i);
-            }
-            jdbc.getJdbcOperations().update(query, args);
-        }
+        insertLinks(film.getId(), genreIdsSet, "films_genres(film_id, genre_id)");
 
         return getFilm(film.getId());
     }
@@ -294,55 +266,61 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     public Collection<Film> mostPopular(Integer count) {
-        SqlParameterSource params = new MapSqlParameterSource("limit", count);
-        String sql = "SELECT films.*, mpa.name AS mpa_name, films_genres.GENRE_ID, genres.NAME AS genre_name FROM FILMS " +
-                "LEFT JOIN films_genres ON films.id = films_genres.film_id " +
-                "LEFT JOIN mpa ON films.MPA_ID = mpa.id " +
-                "LEFT JOIN genres ON GENRE_ID = genres.id " +
-                "WHERE films.id IN (SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit)";
-        Map<Long, Film> filmPopular = jdbc.query(sql, params, rs -> {
-            Map<Long, Film> filmMap = new HashMap<>();
+        List<Film> sortedFilms = jdbc.getJdbcOperations().query("""
+                SELECT f.id, f.name, f.description, f.releaseDate, f.duration,
+                f.mpa_id, m.name AS mpa_name
+                FROM films f
+                JOIN mpa m ON m.id = f.mpa_id
+                LEFT JOIN (
+                    SELECT film_id, COUNT(*) AS likes_count
+                    FROM likes
+                    GROUP BY film_id
+                ) likes_by_film ON likes_by_film.film_id = f.id
+                ORDER BY likes_by_film.likes_count DESC
+                LIMIT ?
+                """, filmRowMapper, count);
 
-            while (rs.next()) {
-                if (filmMap.containsKey(rs.getLong("id"))) {
-                    Film film = filmMap.get(rs.getLong("id"));
-                    Genre genre = new Genre();
-                    genre.setId(rs.getLong("genre_id"));
-                    genre.setName(rs.getString("genre_name"));
-                    film.addGenre(genre);
-                    continue;
-                }
-                Film newFilm = new Film();
-                newFilm.setId(rs.getLong("id"));
-                newFilm.setName(rs.getString("name"));
-                newFilm.setDescription(rs.getString("description"));
-                newFilm.setReleaseDate(rs.getDate("releaseDate").toLocalDate());
-                newFilm.setDuration(rs.getLong("duration"));
-                Mpa mpa = new Mpa();
-                mpa.setId(rs.getLong("mpa_id"));
-                mpa.setName(rs.getString("mpa_name"));
-                newFilm.setMpa(mpa);
-                Genre genre = new Genre();
-                genre.setId(rs.getLong("genre_id"));
-                genre.setName(rs.getString("genre_name"));
-                if (genre.getId() != 0) newFilm.addGenre(genre);
-                filmMap.put(newFilm.getId(), newFilm);
-            }
-            return filmMap;
-        });
+        Map<Long, Film> filmMap = sortedFilms.stream().collect(Collectors.toMap(Film::getId, f -> f));
 
-        String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit";
+        String ids = sortedFilms.stream()
+                .map(f -> f.getId().toString())
+                .collect(Collectors.joining(","));
+        jdbc.getJdbcOperations().query(
 
-        List<Long> listIdPopular = jdbc.queryForList(sql2, params, Long.class);
-        List<Film> filmPopularSorted = new ArrayList<>();
-        for (Long id : listIdPopular) {
-            filmPopularSorted.add(filmPopular.get(id));
-        }
-        return filmPopularSorted;
+                "SELECT fg.film_id, g.id AS genre_id, g.name AS genre_name " +
+                        "FROM films_genres fg JOIN genres g ON g.id = fg.genre_id " +
+                        "WHERE fg.film_id IN (" + ids + ")",
+                (rs, rowNum) -> {
+                    Film film = filmMap.get(rs.getLong("film_id"));
+                    if (film != null) {
+                        Genre genre = new Genre();
+                        genre.setId(rs.getLong("genre_id"));
+                        genre.setName(rs.getString("genre_name"));
+                        film.addGenre(genre);
+                    }
+                    return null;
+                });
+
+        jdbc.getJdbcOperations().query(
+                "SELECT fd.film_id, d.id AS director_id, d.name AS director_name " +
+                        "FROM film_directors fd JOIN directors d ON d.id = fd.director_id " +
+                        "WHERE fd.film_id IN (" + ids + ")",
+                (rs, rowNum) -> {
+                    Film film = filmMap.get(rs.getLong("film_id"));
+                    if (film != null) {
+                        Director director = new Director();
+                        director.setId(rs.getLong("director_id"));
+                        director.setName(rs.getString("director_name"));
+                        film.addDirector(director);
+                    }
+                    return null;
+                });
+
+        return sortedFilms;
     }
 
     public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
-        checkDirectorIds(Set.of(directorId));
+        checkIdsExist(Set.of(directorId), "directors", "Режиссеры не найдены: ");
         String rule = switch (sortBy) {
             case "likes" -> "likes_by_film.likes_count DESC";
             case "year" -> "f.releaseDate";

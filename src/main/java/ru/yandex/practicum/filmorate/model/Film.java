@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import jakarta.validation.Valid;
 import lombok.Data;
 
@@ -18,10 +20,17 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Long duration;
-    private Mpa mpa;
-    private Set<Genre> genres = new TreeSet<>();
-    private Set<Long> likes = new HashSet<>();
+
     @Valid
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private Mpa mpa = new Mpa();
+
+    @JsonSetter(nulls = Nulls.AS_EMPTY, contentNulls = Nulls.FAIL)
+    @Valid
+    private Set<Genre> genres = new TreeSet<>();
+
+    @Valid
+    @JsonSetter(nulls = Nulls.AS_EMPTY, contentNulls = Nulls.FAIL)
     private Set<Director> directors = new TreeSet<>();
 
     public void addDirector(Director director) {
@@ -32,19 +41,4 @@ public class Film {
         genres.add(genre);
     }
 
-    public void removeGenre(Genre genre) {
-        genres.remove(genre);
-    }
-
-    public void addLike(Long userId) {
-        likes.add(userId);
-    }
-
-    public void removeLike(Long userId) {
-        likes.remove(userId);
-    }
-
-    public int countLikes() {
-        return likes.size();
-    }
 }

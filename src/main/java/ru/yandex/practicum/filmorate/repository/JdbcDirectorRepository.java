@@ -50,12 +50,6 @@ public class JdbcDirectorRepository implements DirectorRepository {
         return newDirector;
     }
 
-    private void checkDirectoryName(String name) {
-        Long count = jdbc.queryForObject(FIND_COUNT_DIRECTORS_BY_NAME, Long.class, name);
-        if (count > 0)
-            throw new ValidationException("уже существует режиссер с именем " + name);
-    }
-
     @Override
     public Director findDirById(Long dirId) {
         try {

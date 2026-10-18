@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.DtoMapper.DirectorMapper;
 import ru.yandex.practicum.filmorate.dto.NewDirectorRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateDirectorRequest;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.repository.DirectorRepository;
 import java.util.List;
@@ -28,7 +29,7 @@ public class DirectorService {
         return directorRepository.findAllDirectors();
     }
 
-    public Director updateDirector(NewDirectorRequest newDirectorRq) {
+    public Director updateDirector(UpdateDirectorRequest newDirectorRq) {
         Director newDirector = DirectorMapper.mapToDirector(newDirectorRq);
         return directorRepository.updateDirector(newDirector);
     }

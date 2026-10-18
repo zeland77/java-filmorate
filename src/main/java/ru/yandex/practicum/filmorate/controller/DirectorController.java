@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.NewDirectorRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateDirectorRequest;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 
@@ -34,7 +35,7 @@ public class DirectorController {
     }
 
     @PutMapping
-    public Director updateDirector(@RequestBody @Valid NewDirectorRequest director) {
+    public Director updateDirector(@RequestBody @Valid UpdateDirectorRequest director) {
         return directorService.updateDirector(director);
     }
 
