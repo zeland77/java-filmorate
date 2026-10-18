@@ -34,7 +34,7 @@ public class ReviewService {
     }
 
     public Collection<Review> getByFilmId(Long filmId, Long count) {
-        if (count <= 0) {
+        if (count <= 0 || count == null) {
             throw new ValidationException("Количество отзывов должно быть положительным");
         }
         if (filmId == null) {

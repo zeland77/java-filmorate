@@ -30,7 +30,8 @@ public class JdbcReviewRepository implements ReviewRepository {
                 "r.film_id, " +
                 "(SELECT COUNT(*) FROM reviews_likes rl WHERE rl.review_id = r.id) " +
                 "- (SELECT COUNT(*) FROM reviews_dislikes rd WHERE rd.review_id = r.id) AS useful " +
-                "FROM reviews AS r";
+                "FROM reviews AS r " +
+                "ORDER BY useful DESC";
         return jdbc.query(sql, reviewRowMapper);
     }
 
