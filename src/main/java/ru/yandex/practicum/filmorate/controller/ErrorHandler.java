@@ -41,7 +41,6 @@ public class ErrorHandler {
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequest(Exception e) {
-        log.warn("{}: {}", e.getClass().getName(), e.getMessage());
         return new ErrorResponse("Некорректный запрос: " + e.getMessage());
     }
 

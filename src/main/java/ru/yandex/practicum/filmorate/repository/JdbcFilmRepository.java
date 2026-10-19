@@ -114,47 +114,47 @@ public class JdbcFilmRepository implements FilmRepository {
     }
 
     private void insertLinks(Long filmId, Set<Long> linkedIdsSet, String tableWithArgs) {
-        if (!linkedIdsSet.isEmpty()) {
-            List<Long> insertedIds = linkedIdsSet.stream()
-                    .distinct()
-                    .toList();
+        if (linkedIdsSet.isEmpty()) return;
 
-            String placeholders = insertedIds.stream()
-                    .map(id -> "(?, ?)")
-                    .collect(Collectors.joining(", "));
-            String query = ("INSERT INTO %s " +
-                    "VALUES " + placeholders).formatted(tableWithArgs);
-            Object[] args = new Object[insertedIds.size() * 2];
-            for (int i = 0; i < insertedIds.size(); i++) {
-                args[i * 2] = filmId;
-                args[i * 2 + 1] = insertedIds.get(i);
-            }
-            jdbc.getJdbcOperations().update(query, args);
+        List<Long> insertedIds = linkedIdsSet.stream()
+                .toList();
+
+        String placeholders = insertedIds.stream()
+                .map(id -> "(?, ?)")
+                .collect(Collectors.joining(", "));
+        String query = ("INSERT INTO %s " +
+                "VALUES " + placeholders).formatted(tableWithArgs);
+        Object[] args = new Object[insertedIds.size() * 2];
+        for (int i = 0; i < insertedIds.size(); i++) {
+            args[i * 2] = filmId;
+            args[i * 2 + 1] = insertedIds.get(i);
         }
+        jdbc.getJdbcOperations().update(query, args);
+
     }
 
     private void checkIdsExist(Set<Long> ids, String table, String message) {
-        if (!ids.isEmpty()) {
-            List<Long> checkedIds = ids.stream()
-                    .distinct()
-                    .toList();
+        if (ids.isEmpty()) return;
 
-            String placeholders = checkedIds.stream()
-                    .map(id -> "(?)")
-                    .collect(Collectors.joining(", "));
-            String query = """
-                    SELECT requested.id
-                    FROM (VALUES %s) AS requested(id)
-                    WHERE NOT EXISTS (
-                        SELECT 1 FROM %s t WHERE t.id = requested.id
-                    )
-                    """.formatted(placeholders, table);
+        List<Long> checkedIds = ids.stream()
+                .toList();
 
-            List<Long> nonexistentIds = jdbc.getJdbcOperations().query(query, (rs, rowNum) ->
-                    rs.getLong("id"), checkedIds.toArray());
-            if (!nonexistentIds.isEmpty())
-                throw new NotFoundException(message + nonexistentIds);
-        }
+        String placeholders = checkedIds.stream()
+                .map(id -> "(?)")
+                .collect(Collectors.joining(", "));
+        String query = """
+                SELECT requested.id
+                FROM (VALUES %s) AS requested(id)
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM %s t WHERE t.id = requested.id
+                )
+                """.formatted(placeholders, table);
+
+        List<Long> nonexistentIds = jdbc.getJdbcOperations().query(query, (rs, rowNum) ->
+                rs.getLong("id"), checkedIds.toArray());
+        if (!nonexistentIds.isEmpty())
+            throw new NotFoundException(message + nonexistentIds);
+
     }
 
     public Film delete(Film film) {
