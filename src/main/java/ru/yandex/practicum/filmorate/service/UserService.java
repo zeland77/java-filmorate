@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -42,7 +43,9 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
     }
 
-    public User delete(User user) throws ValidationException {
+    @Transactional
+    public User delete(Long userId) throws ValidationException {
+        User user = getUser(userId);
         userRepository.delete(user);
         return user;
     }

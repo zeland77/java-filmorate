@@ -185,11 +185,18 @@ public class JdbcFilmRepository implements FilmRepository {
 
     public Collection<Film> mostPopular(Integer count) {
         SqlParameterSource params = new MapSqlParameterSource("limit", count);
-        String sql = "SELECT films.*, mpa.name AS mpa_name, films_genres.GENRE_ID, genres.NAME AS genre_name FROM FILMS " +
+        String sql = "SELECT films.*, mpa.name AS mpa_name, " +
+                "films_genres.GENRE_ID, genres.NAME AS genre_name " +
+                "FROM films " +
                 "LEFT JOIN films_genres ON films.id = films_genres.film_id " +
-                "LEFT JOIN mpa ON films.MPA_ID = mpa.id " +
-                "LEFT JOIN genres ON GENRE_ID = genres.id " +
-                "WHERE films.id IN (SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit)";
+                "LEFT JOIN mpa ON films.mpa_id = mpa.id " +
+                "LEFT JOIN genres ON films_genres.genre_id = genres.id " +
+                "WHERE films.id IN (" +
+                "SELECT f.id FROM films f " +
+                "LEFT JOIN likes l ON f.id = l.film_id " +
+                "GROUP BY f.id " +
+                "ORDER BY COUNT(l.user_id) DESC, f.id ASC " +
+                "LIMIT :limit)";
         Map<Long, Film> filmPopular = jdbc.query(sql, params, rs -> {
             Map<Long, Film> filmMap = new HashMap<>();
 
@@ -221,7 +228,8 @@ public class JdbcFilmRepository implements FilmRepository {
             return filmMap;
         });
 
-        String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit";
+        String sql2 = "SELECT f.id FROM films f " + "LEFT JOIN likes l ON f.id = l.film_id " +
+                "GROUP BY f.id " + "ORDER BY COUNT(l.user_id) DESC, f.id ASC " + "LIMIT :limit";
 
         List<Long> listIdPopular = jdbc.queryForList(sql2, params, Long.class);
         List<Film> filmPopularSorted = new ArrayList<>();
