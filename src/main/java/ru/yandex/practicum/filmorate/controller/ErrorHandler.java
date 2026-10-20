@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -28,6 +29,12 @@ public class ErrorHandler {
     public ErrorResponse handleRuntime(RuntimeException e) {
         //e.printStackTrace();
         return new ErrorResponse("Произошла непредвиденная ошибка." + " Ошибка: " + e.getMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleJsonParseValidation(HttpMessageNotReadableException e) {
+        return new ErrorResponse("Некорректный формат JSON-запроса.");
     }
 
 }

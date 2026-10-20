@@ -67,7 +67,7 @@ public class JdbcFilmRepository implements FilmRepository {
             }
             return filmMap.values().stream().toList();
         });
-}
+    }
 
     public Optional<Film> create(Film film) {
         try {
