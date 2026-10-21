@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -47,9 +48,9 @@ public class UserController {
         return userService.update(user);
     }
 
-    @DeleteMapping
-    public User delete(@Valid @RequestBody User user) {
-        return userService.delete(user);
+    @DeleteMapping("/{userId}")
+    public User delete(@PathVariable("userId") Long userId) {
+        return userService.delete(userId);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -65,6 +66,11 @@ public class UserController {
     @DeleteMapping("/{id}/friends/{friendId}")
     public User deleteFromFriends(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
         return userService.removeFriend(id, friendId);
+    }
+
+   @GetMapping("/{id}/recommendations")
+    public Collection<Film> recommendations(@PathVariable("id") Long id) {
+        return userService.recommendations(id);
     }
 
 }

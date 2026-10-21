@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -43,11 +44,14 @@ public class FilmService {
 
     public Film update(Film film) throws ValidationException {
         validateFilmFields(film);
+        getFilm(film.getId());
         return filmRepository.update(film)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
     }
 
-    public Film delete(Film film) {
+    @Transactional
+    public Film delete(Long filmId) {
+        Film film = getFilm(filmId);
         return filmRepository.delete(film);
     }
 
@@ -77,7 +81,6 @@ public class FilmService {
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.addLike(filmId, userId);
-        film.addLike(userId);
         return film;
     }
 
@@ -87,7 +90,6 @@ public class FilmService {
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.removeLike(filmId, userId);
-        film.removeLike(userId);
         return film;
     }
 
@@ -110,6 +112,10 @@ public class FilmService {
             log.error("Некорректная продолжительность фильма {} минут", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
+    }
+
+    public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
+        return filmRepository.findFilmsByDirector(directorId, sortBy);
     }
 
 }
