@@ -8,22 +8,27 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Operation;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.repository.EventRepository;
+import ru.yandex.practicum.filmorate.repository.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final FilmRepository filmRepository;
     private final EventService eventService;
 
-    public UserService(@Qualifier("jdbcUserRepository") UserRepository userRepository, EventService eventService) {
+    public UserService(
+            @Qualifier("jdbcUserRepository") UserRepository userRepository,
+            FilmRepository filmRepository,
+            EventService eventService) {
         this.userRepository = userRepository;
+        this.filmRepository = filmRepository;
         this.eventService = eventService;
     }
 
@@ -48,7 +53,9 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + user.getId() + " не найден"));
     }
 
-    public User delete(User user) throws ValidationException {
+    @Transactional
+    public User delete(Long userId) throws ValidationException {
+        User user = getUser(userId);
         userRepository.delete(user);
         return user;
     }
@@ -79,7 +86,6 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userRepository.getUser(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
-        //user.getFriends().keySet().add(friendId);
         userRepository.addFriend(user, friend);
         eventService.addEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
         return user;
@@ -94,6 +100,49 @@ public class UserService {
         userRepository.removeFriend(user, friend);
         eventService.addEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
         return user;
+    }
+
+    public Collection<Film> recommendations(Long id) {
+        Map<Long, Set<Long>> userLikesMap = userRepository.getAllUsersLikes();
+        // 1. Получаем лайки целевого пользователя
+        Set<Long> targetUserLikes = userLikesMap.get(id);
+        if (targetUserLikes == null || targetUserLikes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        long bestMatchUserId = -1;
+        int maxIntersectionSize = 0;
+       // 2. Ищем пользователя с максимальным пересечением
+        for (Map.Entry<Long, Set<Long>> entry : userLikesMap.entrySet()) {
+            long otherUserId = entry.getKey();
+            // Пропускаем самого себя
+            if (otherUserId == id) {
+                continue;
+            }
+            Set<Long> otherUserFilms = entry.getValue();
+            // Считаем размер пересечения (сколько общих фильмов)
+            int currentIntersectionSize = 0;
+            for (Long filmId : otherUserFilms) {
+                if (targetUserLikes.contains(filmId)) {
+                    currentIntersectionSize++;
+                }
+            }
+            // Если нашли большее пересечение, запоминаем этого пользователя
+            if (currentIntersectionSize > maxIntersectionSize) {
+                maxIntersectionSize = currentIntersectionSize;
+                bestMatchUserId = otherUserId;
+            }
+        }
+        // Если не нашлось ни одного пользователя с общими лайками
+        if (bestMatchUserId == -1 || maxIntersectionSize == 0) {
+            return Collections.emptyList();
+        }
+        // 3. Берем фильмы наиболее похожего пользователя
+        Set<Long> bestMatchFilms = userLikesMap.get(bestMatchUserId);
+        // Возвращаем только те фильмы второго пользователя, которые НЕ лайкал первый
+        return bestMatchFilms.stream()
+                .filter(filmId -> !targetUserLikes.contains(filmId))
+                .map((n) -> filmRepository.getFilm(n).get())
+                .toList();
     }
 
     private void validateUserFields(User user) throws ValidationException {

@@ -44,11 +44,14 @@ public class FilmService {
 
     public Film update(Film film) throws ValidationException {
         validateFilmFields(film);
+        getFilm(film.getId());
         return filmRepository.update(film)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + film.getId() + " не найден"));
     }
 
-    public Film delete(Film film) {
+    @Transactional
+    public Film delete(Long filmId) {
+        Film film = getFilm(filmId);
         return filmRepository.delete(film);
     }
 
@@ -66,7 +69,6 @@ public class FilmService {
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.addLike(filmId, userId);
-        film.addLike(userId);
         eventService.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         return film;
     }
@@ -78,7 +80,6 @@ public class FilmService {
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.removeLike(filmId, userId);
-        film.removeLike(userId);
         eventService.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         return film;
     }
@@ -102,6 +103,10 @@ public class FilmService {
             log.error("Некорректная продолжительность фильма {} минут", film.getDuration());
             throw new ValidationException("Продолжительность фильма должна быть положительным числом");
         }
+    }
+
+    public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
+        return filmRepository.findFilmsByDirector(directorId, sortBy);
     }
 
 }
