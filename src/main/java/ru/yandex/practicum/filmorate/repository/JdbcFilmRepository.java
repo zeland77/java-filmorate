@@ -231,4 +231,67 @@ public class JdbcFilmRepository implements FilmRepository {
         return filmPopularSorted;
     }
 
+    public Collection<Film> mostPopular(Integer count, Long genreId, Integer year) {
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("limit", count)
+                .addValue("genreId", genreId)
+                .addValue("year", year);
+        String sql = """
+                SELECT films.*,
+                       mpa.name AS mpa_name, 
+                       films_genres.GENRE_ID, 
+                       genres.NAME AS genre_name 
+                FROM FILMS 
+                WHERE EXTRACT(YEAR FROM films.release_date) = :year 
+                LEFT JOIN films_genres ON films.id = films_genres.film_id 
+                LEFT JOIN mpa ON films.MPA_ID = mpa.id 
+                LEFT JOIN genres ON GENRE_ID = genres.id 
+                WHERE films.id IN (
+                    SELECT film_id 
+                    FROM likes 
+                    GROUP BY film_id 
+                    ORDER BY COUNT(user_id) DESC 
+                    LIMIT :limit) AND
+                GENRE_ID = :year""";
+        Map<Long, Film> filmPopular = jdbc.query(sql, params, rs -> {
+            Map<Long, Film> filmMap = new HashMap<>();
+
+            while (rs.next()) {
+                if (filmMap.containsKey(rs.getLong("id"))) {
+                    Film film = filmMap.get(rs.getLong("id"));
+                    Genre genre = new Genre();
+                    genre.setId(rs.getLong("genre_id"));
+                    genre.setName(rs.getString("genre_name"));
+                    film.addGenre(genre);
+                    continue;
+                }
+                Film newFilm = new Film();
+                newFilm.setId(rs.getLong("id"));
+                newFilm.setName(rs.getString("name"));
+                newFilm.setDescription(rs.getString("description"));
+                newFilm.setReleaseDate(rs.getDate("releaseDate").toLocalDate());
+                newFilm.setDuration(rs.getLong("duration"));
+                Mpa mpa = new Mpa();
+                mpa.setId(rs.getLong("mpa_id"));
+                mpa.setName(rs.getString("mpa_name"));
+                newFilm.setMpa(mpa);
+                Genre genre = new Genre();
+                genre.setId(rs.getLong("genre_id"));
+                genre.setName(rs.getString("genre_name"));
+                if (genre.getId() != 0) newFilm.addGenre(genre);
+                filmMap.put(newFilm.getId(), newFilm);
+            }
+            return filmMap;
+        });
+
+        String sql2 = "SELECT film_id FROM likes GROUP BY film_id ORDER BY COUNT(user_id) DESC LIMIT :limit";
+
+        List<Long> listIdPopular = jdbc.queryForList(sql2, params, Long.class);
+        List<Film> filmPopularSorted = new ArrayList<>();
+        for (Long id : listIdPopular) {
+            filmPopularSorted.add(filmPopular.get(id));
+        }
+        return filmPopularSorted;
+    }
+
 }
