@@ -68,6 +68,28 @@ CREATE TABLE IF NOT EXISTS reviews (
     CONSTRAINT fk_reviews_film_id FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS directors (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name varchar(40) NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS film_directors (
+    film_id BIGINT NOT NULL,
+    director_id BIGINT NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    CONSTRAINT fk_film_id FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
+    CONSTRAINT fk_director_id FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+);
+
+ALTER TABLE friends ADD FOREIGN KEY (user_id) REFERENCES users (id);
+ALTER TABLE friends ADD FOREIGN KEY (friend_id) REFERENCES users (id);
+ALTER TABLE friends ADD FOREIGN KEY (friendship_id) REFERENCES friendship (id);
+
+ALTER TABLE likes ADD FOREIGN KEY (user_id) REFERENCES users (id);
+ALTER TABLE likes ADD FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE;
+
+ALTER TABLE films_genres ADD FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE;
+ALTER TABLE films_genres ADD FOREIGN KEY (genre_id) REFERENCES genres (id);
 CREATE TABLE IF NOT EXISTS reviews_likes (
     review_id BIGINT,
     user_id BIGINT,
