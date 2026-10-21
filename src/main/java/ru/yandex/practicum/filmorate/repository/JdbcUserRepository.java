@@ -47,12 +47,6 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     public User delete(User user) throws ValidationException {
-        jdbc.update("DELETE FROM likes WHERE user_id = :id",
-                Map.of("id", user.getId())
-        );
-        jdbc.update("DELETE FROM friends WHERE user_id = :id",
-                Map.of("id", user.getId())
-        );
         jdbc.update("DELETE FROM users WHERE id = :id",
                 Map.of("id", user.getId())
         );

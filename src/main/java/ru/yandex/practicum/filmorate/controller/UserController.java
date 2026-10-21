@@ -47,9 +47,9 @@ public class UserController {
         return userService.update(user);
     }
 
-    @DeleteMapping
-    public User delete(@Valid @RequestBody User user) {
-        return userService.delete(user);
+    @DeleteMapping("/{userId}")
+    public User delete(@PathVariable("userId") Long userId) {
+        return userService.delete(userId);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
