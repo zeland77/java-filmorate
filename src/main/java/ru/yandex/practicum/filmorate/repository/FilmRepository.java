@@ -23,4 +23,6 @@ public interface FilmRepository {
     Collection<Film> mostPopular(Integer count);
 
     Collection<Film> findFilmsByDirector(Long directorId, String sortBy);
+
+    Collection<Film> commonFilms(Long userId, Long friendId);
 }

@@ -36,6 +36,11 @@ public class FilmController {
         return filmService.mostPopular(count);
     }
 
+    @GetMapping("/common")
+    public Collection<Film> commonFilms(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId) {
+        return filmService.commonFilms(userId, friendId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film create(@Valid @RequestBody Film film) {

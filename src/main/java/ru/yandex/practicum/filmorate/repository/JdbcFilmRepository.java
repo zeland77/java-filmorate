@@ -318,6 +318,33 @@ public class JdbcFilmRepository implements FilmRepository {
         return sortedFilms;
     }
 
+    @Override
+    public Collection<Film> commonFilms(Long userId, Long friendId) {
+        String commonFilmsSql = "SELECT film_id " +
+                "FROM likes " +
+                "WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = :userId) " +
+                "AND film_id IN (SELECT film_id FROM likes WHERE user_id = :friendId) " +
+                "GROUP BY film_id " +
+                "ORDER BY COUNT(*) DESC, film_id ASC";
+        
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("userId", userId);
+        parameters.addValue("friendId", friendId);
+
+        List<Long> commonFilmIds = jdbc.queryForList(
+                commonFilmsSql, parameters, Long.class);
+        List<Film> commonFilms = new ArrayList<>();
+
+        for (Long filmId : commonFilmIds) {
+            Film film = getFilm(filmId)
+                    .orElseThrow(() -> new NotFoundException(
+                            "Фильм с id = " + filmId + " не найден"));
+            commonFilms.add(film);
+        }
+
+        return commonFilms;
+    }
+
     public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
         checkIdsExist(Set.of(directorId), "directors", "Режиссеры не найдены: ");
         String rule = switch (sortBy) {
