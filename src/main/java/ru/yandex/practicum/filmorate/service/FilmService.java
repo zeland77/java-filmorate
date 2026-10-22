@@ -56,17 +56,14 @@ public class FilmService {
     }
 
     public Collection<Film> mostPopular(Integer count, Long genreId, Integer year) throws ValidationException {
-        if (count <= 0) {
+        if (count != null && count <= 0) {
             throw new ValidationException("Количество популярных фильмов должно быть положительным");
         }
-        if (genreId == null || year == null) {
-            return filmRepository.mostPopular(count);
-        }
-        if (year < Film.MIN_FILM_RELEASE_DATE.getYear()) {
+        if (year != null && year < Film.MIN_FILM_RELEASE_DATE.getYear()) {
             throw new ValidationException("Год релиза фильма не может быть раньше "
                     + Film.MIN_FILM_RELEASE_DATE.getYear());
         }
-        if (genreRepository.findAll().stream()
+        if (genreId != null && genreRepository.findAll().stream()
                 .map(Genre::getId).filter(id -> id == genreId)
                 .findFirst()
                 .isEmpty()) {
