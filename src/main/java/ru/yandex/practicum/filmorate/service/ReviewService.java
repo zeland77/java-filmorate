@@ -3,8 +3,11 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.ReviewRepository;
@@ -18,14 +21,17 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final EventService eventService;
 
     @Autowired
     public ReviewService(ReviewRepository reviewRepository,
                          FilmRepository filmRepository,
-                         UserRepository userRepository) {
+                         UserRepository userRepository,
+                         EventService eventService) {
         this.reviewRepository = reviewRepository;
         this.filmRepository = filmRepository;
         this.userRepository = userRepository;
+        this.eventService = eventService;
     }
 
     public Review getReview(Long reviewId) {
@@ -46,23 +52,46 @@ public class ReviewService {
         return reviewRepository.getByFilmId(filmId, count);
     }
 
+    @Transactional
     public Review create(Review review) {
         validateReviewFields(review);
-        return reviewRepository.create(review)
+        Review savedReview = reviewRepository.create(review)
                 .orElseThrow(() -> new ValidationException("Отзыв пользователя с Id " + review.getUserId()
                          + "для фильма c Id " + review.getFilmId() + " уже зарегистрирован"));
+
+        eventService.addEvent(savedReview.getUserId(),
+                EventType.REVIEW,
+                Operation.ADD,
+                savedReview.getReviewId());
+
+        return savedReview;
     }
 
+    @Transactional
     public Review update(Review review) {
         validateReviewFields(review);
-        return reviewRepository.update(review)
+        Review updatedReview = reviewRepository.update(review)
                 .orElseThrow(() -> new NotFoundException("Отзыв с reviewId = " + review.getReviewId() +
                         " для фильма filmId = " + review.getFilmId() +
                         ", оставленный userId = " + review.getUserId() + " не найден"));
+
+        eventService.addEvent(updatedReview.getUserId(),
+                EventType.REVIEW,
+                Operation.UPDATE,
+                updatedReview.getReviewId());
+
+        return updatedReview;
     }
 
+    @Transactional
     public void delete(Long reviewId) {
+        Review review = getReview(reviewId);
         reviewRepository.delete(reviewId);
+
+        eventService.addEvent(review.getUserId(),
+                EventType.REVIEW,
+                Operation.REMOVE,
+                review.getReviewId());
     }
 
     public Review addLike(Long reviewId, Long userId) {
