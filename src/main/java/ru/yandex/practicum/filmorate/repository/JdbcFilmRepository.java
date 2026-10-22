@@ -326,7 +326,6 @@ public class JdbcFilmRepository implements FilmRepository {
                 "AND film_id IN (SELECT film_id FROM likes WHERE user_id = :friendId) " +
                 "GROUP BY film_id " +
                 "ORDER BY COUNT(*) DESC, film_id ASC";
-        
         MapSqlParameterSource parameters = new MapSqlParameterSource();
         parameters.addValue("userId", userId);
         parameters.addValue("friendId", friendId);
