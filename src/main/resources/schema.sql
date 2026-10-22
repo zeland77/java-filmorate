@@ -81,15 +81,6 @@ CREATE TABLE IF NOT EXISTS film_directors (
     CONSTRAINT fk_director_id FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
 );
 
-ALTER TABLE friends ADD FOREIGN KEY (user_id) REFERENCES users (id);
-ALTER TABLE friends ADD FOREIGN KEY (friend_id) REFERENCES users (id);
-ALTER TABLE friends ADD FOREIGN KEY (friendship_id) REFERENCES friendship (id);
-
-ALTER TABLE likes ADD FOREIGN KEY (user_id) REFERENCES users (id);
-ALTER TABLE likes ADD FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE;
-
-ALTER TABLE films_genres ADD FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE;
-ALTER TABLE films_genres ADD FOREIGN KEY (genre_id) REFERENCES genres (id);
 CREATE TABLE IF NOT EXISTS reviews_likes (
     review_id BIGINT,
     user_id BIGINT,
@@ -105,3 +96,14 @@ CREATE TABLE IF NOT EXISTS reviews_dislikes (
     CONSTRAINT fk_reviews_dislikes_user_id FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_dislikes_review_id FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    timestamp BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    event_type VARCHAR(20) NOT NULL,
+    operation VARCHAR(20) NOT NULL,
+    entity_id BIGINT NOT NULL
+);
+
+ALTER TABLE events ADD FOREIGN KEY (user_id) REFERENCES users (id);

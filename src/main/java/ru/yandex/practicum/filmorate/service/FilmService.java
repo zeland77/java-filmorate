@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
 
@@ -17,10 +19,12 @@ import java.util.Collection;
 public class FilmService {
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final EventService eventService;
 
-    public FilmService(FilmRepository filmRepository, UserRepository userRepository) {
+    public FilmService(FilmRepository filmRepository, UserRepository userRepository, EventService eventService) {
         this.filmRepository = filmRepository;
         this.userRepository = userRepository;
+        this.eventService = eventService;
     }
 
     public Collection<Film> findAll() {
@@ -58,21 +62,25 @@ public class FilmService {
         return filmRepository.mostPopular(count);
     }
 
+    @Transactional
     public Film addLike(Long filmId, Long userId) throws ValidationException {
         userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.addLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
         return film;
     }
 
+    @Transactional
     public Film removeLike(Long filmId, Long userId) throws ValidationException {
         userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         Film film = filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
         filmRepository.removeLike(filmId, userId);
+        eventService.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
         return film;
     }
 

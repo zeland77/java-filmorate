@@ -5,21 +5,26 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.EventService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
     private UserService userService;
+    private final EventService eventService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, EventService eventService) {
         this.userService = userService;
+        this.eventService = eventService;
     }
 
     @GetMapping
@@ -30,6 +35,11 @@ public class UserController {
     @GetMapping("/{id}")
     public User getUser(@PathVariable("id") Long id) {
         return userService.getUser(id);
+    }
+
+    @GetMapping("{id}/feed")
+    public List<Event> getFeed(@PathVariable("id") Long id) {
+        return eventService.getFeed(id);
     }
 
     @GetMapping("/{id}/friends")
