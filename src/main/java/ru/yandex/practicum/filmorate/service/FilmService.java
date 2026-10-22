@@ -6,7 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.GenreRepository;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.format.DateTimeFormatter;
@@ -17,10 +19,12 @@ import java.util.Collection;
 public class FilmService {
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
+    private final GenreRepository genreRepository;
 
-    public FilmService(FilmRepository filmRepository, UserRepository userRepository) {
+    public FilmService(FilmRepository filmRepository, UserRepository userRepository, GenreRepository genreRepository) {
         this.filmRepository = filmRepository;
         this.userRepository = userRepository;
+        this.genreRepository = genreRepository;
     }
 
     public Collection<Film> findAll() {
@@ -51,11 +55,21 @@ public class FilmService {
         return filmRepository.delete(film);
     }
 
-    public Collection<Film> mostPopular(Integer count) throws ValidationException {
-        if (count <= 0) {
+    public Collection<Film> mostPopular(Integer count, Long genreId, Integer year) throws ValidationException {
+        if (count != null && count <= 0) {
             throw new ValidationException("Количество популярных фильмов должно быть положительным");
         }
-        return filmRepository.mostPopular(count);
+        if (year != null && year < Film.MIN_FILM_RELEASE_DATE.getYear()) {
+            throw new ValidationException("Год релиза фильма не может быть раньше "
+                    + Film.MIN_FILM_RELEASE_DATE.getYear());
+        }
+        if (genreId != null && genreRepository.findAll().stream()
+                .map(Genre::getId).filter(id -> id == genreId)
+                .findFirst()
+                .isEmpty()) {
+            throw new ValidationException("Жанр c id = " + genreId + "отсутствует");
+        }
+        return filmRepository.mostPopular(count, genreId, year);
     }
 
     public Film addLike(Long filmId, Long userId) throws ValidationException {
