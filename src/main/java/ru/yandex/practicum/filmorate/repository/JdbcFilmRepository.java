@@ -388,13 +388,13 @@ public class JdbcFilmRepository implements FilmRepository {
 
         String sql = """
            SELECT films.*, mpa.name AS mpa_name
-           FROM FILMS 
-           LEFT JOIN mpa ON films.MPA_ID = mpa.id 
-           LEFT JOIN likes ON films.id = likes.film_id 
+           FROM FILMS
+           LEFT JOIN mpa ON films.MPA_ID = mpa.id
+           LEFT JOIN likes ON films.id = likes.film_id
            WHERE (:year IS NULL OR EXTRACT(YEAR FROM films.releaseDate) = :year)
              AND (:genreId IS NULL OR films.id IN (SELECT film_id FROM films_genres WHERE genre_id = :genreId))
-           GROUP BY films.id, mpa.name 
-           ORDER BY COUNT(likes.user_id) DESC 
+           GROUP BY films.id, mpa.name
+           ORDER BY COUNT(likes.user_id) DESC
            %s
            """.formatted(count != null ? "LIMIT :limit" : "");
 
