@@ -3,16 +3,22 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
+import ru.yandex.practicum.filmorate.repository.GenreRepository;
 import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -20,11 +26,16 @@ public class FilmService {
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
+    private final GenreRepository genreRepository;
 
-    public FilmService(FilmRepository filmRepository, UserRepository userRepository, EventService eventService) {
+    public FilmService(FilmRepository filmRepository,
+                       UserRepository userRepository,
+                       EventService eventService,
+                       GenreRepository genreRepository) {
         this.filmRepository = filmRepository;
         this.userRepository = userRepository;
         this.eventService = eventService;
+        this.genreRepository = genreRepository;
     }
 
     public Collection<Film> findAll() {
@@ -39,7 +50,7 @@ public class FilmService {
     public Film create(Film film) throws ValidationException {
         validateFilmFields(film);
         return filmRepository.create(film)
-                .orElseThrow(() -> new ValidationException("Фильм с таким именем = " + film.getName() + " уже зарегистрирован"));
+                .orElseThrow(() -> new InternalServerException("Не удалось сохранить фильм " + film.getName()));
     }
 
     public Film update(Film film) throws ValidationException {
@@ -55,11 +66,21 @@ public class FilmService {
         return filmRepository.delete(film);
     }
 
-    public Collection<Film> mostPopular(Integer count) throws ValidationException {
-        if (count <= 0) {
+    public Collection<Film> mostPopular(Integer count, Long genreId, Integer year) throws ValidationException {
+        if (count != null && count <= 0) {
             throw new ValidationException("Количество популярных фильмов должно быть положительным");
         }
-        return filmRepository.mostPopular(count);
+        if (year != null && year < Film.MIN_FILM_RELEASE_DATE.getYear()) {
+            throw new ValidationException("Год релиза фильма не может быть раньше "
+                    + Film.MIN_FILM_RELEASE_DATE.getYear());
+        }
+        if (genreId != null && genreRepository.findAll().stream()
+                .map(Genre::getId).filter(id -> id.equals(genreId))
+                .findFirst()
+                .isEmpty()) {
+            throw new ValidationException("Жанр c id = " + genreId + "отсутствует");
+        }
+        return filmRepository.mostPopular(count, genreId, year);
     }
 
     public Collection<Film> commonFilms(Long userId, Long friendId) {
@@ -117,6 +138,11 @@ public class FilmService {
 
     public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
         return filmRepository.findFilmsByDirector(directorId, sortBy);
+    }
+
+    public Collection<Film> searchFilms(String query, List<String> by) {
+        Set<String> searchFields = by.stream().map(String::toLowerCase).map(String::trim).collect(Collectors.toSet());
+        return filmRepository.searchFilms(query, searchFields);
     }
 
 }
