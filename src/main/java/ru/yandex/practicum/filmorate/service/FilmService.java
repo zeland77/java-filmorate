@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,6 +14,9 @@ import ru.yandex.practicum.filmorate.repository.UserRepository;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -39,7 +43,7 @@ public class FilmService {
     public Film create(Film film) throws ValidationException {
         validateFilmFields(film);
         return filmRepository.create(film)
-                .orElseThrow(() -> new ValidationException("Фильм с таким именем = " + film.getName() + " уже зарегистрирован"));
+                .orElseThrow(() -> new InternalServerException("Не удалось сохранить фильм " + film.getName()));
     }
 
     public Film update(Film film) throws ValidationException {
@@ -123,6 +127,11 @@ public class FilmService {
 
     public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
         return filmRepository.findFilmsByDirector(directorId, sortBy);
+    }
+
+    public Collection<Film> searchFilms(String query, List<String> by) {
+        Set<String> searchFields = by.stream().map(String::toLowerCase).map(String::trim).collect(Collectors.toSet());
+        return filmRepository.searchFilms(query, searchFields);
     }
 
 }
