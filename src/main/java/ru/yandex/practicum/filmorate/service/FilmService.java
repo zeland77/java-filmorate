@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +23,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
     private final GenreRepository genreRepository;
-
-    public FilmService(FilmRepository filmRepository,
-                       UserRepository userRepository,
-                       EventService eventService,
-                       GenreRepository genreRepository) {
-        this.filmRepository = filmRepository;
-        this.userRepository = userRepository;
-        this.eventService = eventService;
-        this.genreRepository = genreRepository;
-    }
 
     public Collection<Film> findAll() {
         return filmRepository.findAll();

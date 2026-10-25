@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -18,19 +18,11 @@ import java.util.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final FilmRepository filmRepository;
     private final EventService eventService;
-
-    public UserService(
-            @Qualifier("jdbcUserRepository") UserRepository userRepository,
-            FilmRepository filmRepository,
-            EventService eventService) {
-        this.userRepository = userRepository;
-        this.filmRepository = filmRepository;
-        this.eventService = eventService;
-    }
 
     public Collection<User> findAll() {
         return userRepository.findAll();

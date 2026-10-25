@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -17,22 +17,13 @@ import java.util.Collection;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final FilmRepository filmRepository;
     private final UserRepository userRepository;
     private final EventService eventService;
 
-    @Autowired
-    public ReviewService(ReviewRepository reviewRepository,
-                         FilmRepository filmRepository,
-                         UserRepository userRepository,
-                         EventService eventService) {
-        this.reviewRepository = reviewRepository;
-        this.filmRepository = filmRepository;
-        this.userRepository = userRepository;
-        this.eventService = eventService;
-    }
 
     public Review getReview(Long reviewId) {
         return reviewRepository.getReview(reviewId)

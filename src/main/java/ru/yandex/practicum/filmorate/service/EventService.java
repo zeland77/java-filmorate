@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -13,15 +13,10 @@ import ru.yandex.practicum.filmorate.repository.UserRepository;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
-
-    public EventService(EventRepository eventRepository,
-                         @Qualifier("jdbcUserRepository") UserRepository userRepository) {
-        this.eventRepository = eventRepository;
-        this.userRepository = userRepository;
-    }
 
     public List<Event> getFeed(Long userId) {
         userRepository.getUser(userId)
