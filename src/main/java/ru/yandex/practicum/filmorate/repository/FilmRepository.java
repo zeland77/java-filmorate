@@ -23,7 +23,11 @@ public interface FilmRepository {
 
     Collection<Film> mostPopular(Integer count);
 
+    Collection<Film> mostPopular(Integer count, Long genreId, Integer year);
+
     Collection<Film> findFilmsByDirector(Long directorId, String sortBy);
 
     Collection<Film> searchFilms(String query, Set<String> searchFields);
+  
+    Collection<Film> commonFilms(Long userId, Long friendId);
 }

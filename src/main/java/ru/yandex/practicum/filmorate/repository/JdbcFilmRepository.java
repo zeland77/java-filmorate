@@ -337,6 +337,32 @@ public class JdbcFilmRepository implements FilmRepository {
         );
     }
 
+    @Override
+    public Collection<Film> commonFilms(Long userId, Long friendId) {
+        String commonFilmsSql = "SELECT film_id " +
+                "FROM likes " +
+                "WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = :userId) " +
+                "AND film_id IN (SELECT film_id FROM likes WHERE user_id = :friendId) " +
+                "GROUP BY film_id " +
+                "ORDER BY COUNT(*) DESC, film_id ASC";
+        MapSqlParameterSource parameters = new MapSqlParameterSource();
+        parameters.addValue("userId", userId);
+        parameters.addValue("friendId", friendId);
+
+        List<Long> commonFilmIds = jdbc.queryForList(
+                commonFilmsSql, parameters, Long.class);
+        List<Film> commonFilms = new ArrayList<>();
+
+        for (Long filmId : commonFilmIds) {
+            Film film = getFilm(filmId)
+                    .orElseThrow(() -> new NotFoundException(
+                            "Фильм с id = " + filmId + " не найден"));
+            commonFilms.add(film);
+        }
+
+        return commonFilms;
+    }
+
     public Collection<Film> findFilmsByDirector(Long directorId, String sortBy) {
         checkIdsExist(Set.of(directorId), "directors", "Режиссеры не найдены: ");
         String rule = switch (sortBy) {
@@ -410,4 +436,64 @@ public class JdbcFilmRepository implements FilmRepository {
 
         return sortedFilms;
     }
+
+    public Collection<Film> mostPopular(Integer count, Long genreId, Integer year) {
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("limit", count)
+                .addValue("genreId", genreId)
+                .addValue("year", year);
+
+        String sql = """
+           SELECT films.*, mpa.name AS mpa_name
+           FROM FILMS
+           LEFT JOIN mpa ON films.MPA_ID = mpa.id
+           LEFT JOIN likes ON films.id = likes.film_id
+           WHERE (:year IS NULL OR EXTRACT(YEAR FROM films.releaseDate) = :year)
+             AND (:genreId IS NULL OR films.id IN (SELECT film_id FROM films_genres WHERE genre_id = :genreId))
+           GROUP BY films.id, mpa.name
+           ORDER BY COUNT(likes.user_id) DESC
+           %s
+           """.formatted(count != null ? "LIMIT :limit" : "");
+
+        List<Film> sortedFilms = jdbc.query(sql, params, filmRowMapper);
+
+        Map<Long, Film> filmMap = sortedFilms.stream().collect(Collectors.toMap(Film::getId, f -> f));
+
+        String ids = sortedFilms.stream()
+                .map(f -> f.getId().toString())
+                .collect(Collectors.joining(","));
+
+        jdbc.getJdbcOperations().query(
+                "SELECT fg.film_id, g.id AS genre_id, g.name AS genre_name " +
+                        "FROM films_genres fg JOIN genres g ON g.id = fg.genre_id " +
+                        "WHERE fg.film_id IN (" + ids + ")",
+                (rs, rowNum) -> {
+                    Film film = filmMap.get(rs.getLong("film_id"));
+                    if (film != null) {
+                        Genre genre = new Genre();
+                        genre.setId(rs.getLong("genre_id"));
+                        genre.setName(rs.getString("genre_name"));
+                        film.addGenre(genre);
+                    }
+                    return null;
+                });
+
+        jdbc.getJdbcOperations().query(
+                "SELECT fd.film_id, d.id AS director_id, d.name AS director_name " +
+                        "FROM film_directors fd JOIN directors d ON d.id = fd.director_id " +
+                        "WHERE fd.film_id IN (" + ids + ")",
+                (rs, rowNum) -> {
+                    Film film = filmMap.get(rs.getLong("film_id"));
+                    if (film != null) {
+                        Director director = new Director();
+                        director.setId(rs.getLong("director_id"));
+                        director.setName(rs.getString("director_name"));
+                        film.addDirector(director);
+                    }
+                    return null;
+                });
+
+        return sortedFilms;
+    }
+
 }
