@@ -28,6 +28,6 @@ public interface FilmRepository {
     Collection<Film> findFilmsByDirector(Long directorId, String sortBy);
 
     Collection<Film> searchFilms(String query, Set<String> searchFields);
-  
+
     Collection<Film> commonFilms(Long userId, Long friendId);
 }
