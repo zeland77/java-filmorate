@@ -62,6 +62,16 @@ public class FilmService {
         return filmRepository.mostPopular(count);
     }
 
+    public Collection<Film> commonFilms(Long userId, Long friendId) {
+        userRepository.getUser(userId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Пользователь с id = " + userId + " не найден"));
+        userRepository.getUser(friendId)
+                .orElseThrow(() -> new NotFoundException(
+                        "Пользователь с id = " + friendId + " не найден"));
+        return filmRepository.commonFilms(userId, friendId);
+    }
+
     @Transactional
     public Film addLike(Long filmId, Long userId) throws ValidationException {
         userRepository.getUser(userId)
