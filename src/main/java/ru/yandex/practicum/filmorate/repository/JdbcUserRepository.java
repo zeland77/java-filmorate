@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
@@ -43,7 +44,11 @@ public class JdbcUserRepository implements UserRepository {
         }
     }
 
+    @Transactional
     public User delete(User user) throws ValidationException {
+        jdbc.update("DELETE FROM events WHERE user_id = :id",
+                Map.of("id", user.getId())
+        );
         jdbc.update("DELETE FROM users WHERE id = :id",
                 Map.of("id", user.getId())
         );

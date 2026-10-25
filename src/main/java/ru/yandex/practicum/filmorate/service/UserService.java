@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.Operation;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.repository.FilmRepository;
@@ -19,11 +21,15 @@ import java.util.*;
 public class UserService {
     private final UserRepository userRepository;
     private final FilmRepository filmRepository;
+    private final EventService eventService;
 
-    @Autowired
-    public UserService(UserRepository userRepository, FilmRepository filmRepository) {
+    public UserService(
+            @Qualifier("jdbcUserRepository") UserRepository userRepository,
+            FilmRepository filmRepository,
+            EventService eventService) {
         this.userRepository = userRepository;
         this.filmRepository = filmRepository;
+        this.eventService = eventService;
     }
 
     public Collection<User> findAll() {
@@ -74,21 +80,25 @@ public class UserService {
                 .toList();
     }
 
+    @Transactional
     public User addFriend(Long userId, Long friendId) {
         User user = userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userRepository.getUser(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
         userRepository.addFriend(user, friend);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.ADD, friendId);
         return user;
     }
 
+    @Transactional
     public User removeFriend(Long userId, Long friendId) {
         User user = userRepository.getUser(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
         User friend = userRepository.getUser(friendId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id = " + friendId + " не найден"));
         userRepository.removeFriend(user, friend);
+        eventService.addEvent(userId, EventType.FRIEND, Operation.REMOVE, friendId);
         return user;
     }
 
