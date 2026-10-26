@@ -88,7 +88,7 @@ public class JdbcReviewRepository implements ReviewRepository {
     public Optional<Review> update(Review review) {
         SqlParameterSource namedParameters = new BeanPropertySqlParameterSource(review);
         int rowUpdated = jdbc.update("UPDATE reviews SET content = :content, isPositive = :isPositive " +
-                        "WHERE id = :reviewId AND user_id = :userId AND film_id = :filmId",
+                        "WHERE id = :reviewId",
                 namedParameters);
         if (rowUpdated > 0) {
             return getReview(review.getReviewId());
