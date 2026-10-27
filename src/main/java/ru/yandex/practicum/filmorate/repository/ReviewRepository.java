@@ -13,6 +13,8 @@ public interface ReviewRepository {
 
     Collection<Review> getByFilmId(Long filmId, Long count);
 
+    Collection<Review> getByCount(Long count);
+
     Optional<Review> create(Review review);
 
     Optional<Review> update(Review review);

@@ -31,11 +31,11 @@ public class ReviewService {
     }
 
     public Collection<Review> getByFilmId(Long filmId, Long count) {
-        if (count <= 0 || count == null) {
+        if (count == null || count <= 0) {
             throw new ValidationException("Количество отзывов должно быть положительным");
         }
         if (filmId == null) {
-            return reviewRepository.findAll();
+            return reviewRepository.getByCount(count);
         }
         filmRepository.getFilm(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
@@ -60,7 +60,6 @@ public class ReviewService {
 
     @Transactional
     public Review update(Review review) {
-        validateReviewFields(review);
         Review updatedReview = reviewRepository.update(review)
                 .orElseThrow(() -> new NotFoundException("Отзыв с reviewId = " + review.getReviewId() +
                         " для фильма filmId = " + review.getFilmId() +

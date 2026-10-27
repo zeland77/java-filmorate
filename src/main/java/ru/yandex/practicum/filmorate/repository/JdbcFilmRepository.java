@@ -421,6 +421,7 @@ public class JdbcFilmRepository implements FilmRepository {
                 switch (field) {
                     case "director" -> "LOWER(fdn.director_name) LIKE ?";
                     case "title" -> "LOWER(f.name) LIKE ?";
+                    case "description" ->  "LOWER(f.description) LIKE ?";
                     default -> throw new ValidationException("Недопустимое значение by " + field);
                 }
         ).collect(Collectors.joining(" OR "));

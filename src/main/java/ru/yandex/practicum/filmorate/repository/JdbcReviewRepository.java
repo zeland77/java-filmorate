@@ -66,6 +66,21 @@ public class JdbcReviewRepository implements ReviewRepository {
         return jdbc.query(sql, Map.of("film_id", filmId, "count", count), reviewRowMapper);
     }
 
+    public Collection<Review> getByCount(Long count) {
+        String sql = "SELECT" +
+                " r.id, " +
+                "r.content, " +
+                "r.isPositive, " +
+                "r.user_id, " +
+                "r.film_id, " +
+                "(SELECT COUNT(*) FROM reviews_likes rl WHERE rl.review_id = r.id) " +
+                "- (SELECT COUNT(*) FROM reviews_dislikes rd WHERE rd.review_id = r.id) AS useful " +
+                "FROM reviews AS r " +
+                "ORDER BY useful DESC " +
+                "LIMIT :count";
+        return jdbc.query(sql, Map.of("count", count), reviewRowMapper);
+    }
+
     public Optional<Review> create(Review review) {
         try {
             KeyHolder keyHolder = new GeneratedKeyHolder();

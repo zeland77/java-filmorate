@@ -39,12 +39,14 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
+    @Transactional
     public Film create(Film film) throws ValidationException {
         validateFilmFields(film);
         return filmRepository.create(film)
                 .orElseThrow(() -> new InternalServerException("Не удалось сохранить фильм " + film.getName()));
     }
 
+    @Transactional
     public Film update(Film film) throws ValidationException {
         validateFilmFields(film);
         getFilm(film.getId());
