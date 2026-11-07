@@ -4,7 +4,9 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface UserRepository {
     Collection<User> findAll();
@@ -22,4 +24,6 @@ public interface UserRepository {
     User removeFriend(User user, User friend);
 
     Collection<User> getFriends(User user);
+
+    Map<Long, Set<Long>> getAllUsersLikes();
 }

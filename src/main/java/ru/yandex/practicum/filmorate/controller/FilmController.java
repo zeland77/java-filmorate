@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,18 +32,25 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> mostPopular(@RequestParam(required = false, defaultValue = "10") final Integer count) {
-        return filmService.mostPopular(count);
+    public Collection<Film> mostPopular(@RequestParam(required = false) Integer count,
+                                        @RequestParam(required = false) Long genreId,
+                                        @RequestParam(required = false) Integer year) {
+        return filmService.mostPopular(count, genreId, year);
+    }
+
+    @GetMapping("/common")
+    public Collection<Film> commonFilms(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId) {
+        return filmService.commonFilms(userId, friendId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         return filmService.create(film);
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         return filmService.update(film);
     }
 
@@ -51,14 +59,25 @@ public class FilmController {
         return filmService.addLike(filmId, userId);
     }
 
-    @DeleteMapping
-    public Film delete(@RequestBody Film film) {
-        return filmService.delete(film);
+    @DeleteMapping("/{filmId}")
+    public Film delete(@PathVariable("filmId") Long filmId) {
+        return filmService.delete(filmId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public Film deleteLike(@PathVariable("id") Long filmId, @PathVariable("userId") Long userId) {
         return filmService.removeLike(filmId, userId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public Collection<Film> findFilmsByDirector(@PathVariable Long directorId, @RequestParam String sortBy) {
+        return filmService.findFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public Collection<Film> search(@RequestParam(required = false) String query,
+                                   @RequestParam(defaultValue = "title") List<String> by) {
+        return filmService.searchFilms(query, by);
     }
 
 }

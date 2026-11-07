@@ -9,14 +9,12 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository("jdbcUserRepository")
 @RequiredArgsConstructor
@@ -46,11 +44,9 @@ public class JdbcUserRepository implements UserRepository {
         }
     }
 
+    @Transactional
     public User delete(User user) throws ValidationException {
-        jdbc.update("DELETE FROM likes WHERE user_id = :id",
-                Map.of("id", user.getId())
-        );
-        jdbc.update("DELETE FROM friends WHERE user_id = :id",
+        jdbc.update("DELETE FROM events WHERE user_id = :id",
                 Map.of("id", user.getId())
         );
         jdbc.update("DELETE FROM users WHERE id = :id",
@@ -98,6 +94,17 @@ public class JdbcUserRepository implements UserRepository {
                 Map.of("userId", user.getId()),
                 userRowMapper);
         return friends;
+    }
+
+    public Map<Long, Set<Long>> getAllUsersLikes() {
+        String sql = "SELECT user_id, film_id FROM likes";
+        Map<Long, Set<Long>> userLikesMap = new HashMap<>();
+        jdbc.query(sql, rs -> {
+            long userId = rs.getLong("user_id");
+            long filmId = rs.getLong("film_id");
+            userLikesMap.computeIfAbsent(userId, k -> new HashSet<>()).add(filmId);
+        });
+        return userLikesMap;
     }
 
 }
